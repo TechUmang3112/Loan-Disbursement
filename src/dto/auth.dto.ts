@@ -2,11 +2,9 @@
 import {
   IsEmail,
   IsNotEmpty,
-  IsPhoneNumber,
   IsString,
   MaxLength,
   MinLength,
-  isAlphanumeric,
 } from 'class-validator';
 
 export class SignUpDto {
@@ -33,7 +31,4 @@ export class SignUpDto {
   @MinLength(6)
   @MaxLength(32)
   password: string;
-
-  //otp_timer: Date;
-  //max_retry: number;
 }

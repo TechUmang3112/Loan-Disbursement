@@ -1,12 +1,13 @@
 // Imports
-import { LoginDto } from './login.dto';
-import { SignUpDto } from './auth.dto';
+import { LoginDto } from '../dto/login.dto';
+import { SignUpDto } from '../dto/auth.dto';
 import { OtpDto } from '../otp/otp.dto';
 import { AuthService } from './auth.service';
-import { Controller, Post, Body, Req } from '@nestjs/common'; // Remove un used
+import { Controller, Post, Body } from '@nestjs/common';
+import { BasicDto } from '../dto/basic.dto';
 
 @Controller('auth')
-export class AuthController {
+export default class AuthController {
   constructor(private readonly service: AuthService) {}
 
   @Post('signup')
@@ -28,5 +29,10 @@ export class AuthController {
   @Post('resendOtp')
   async resendOtp(@Body('email') email: string) {
     return await this.service.resendOtp(email);
+  }
+
+  @Post('basicdetails')
+  async basicDetails(@Body() BasicDto: BasicDto) {
+    return await this.service.basicDetails(BasicDto);
   }
 }

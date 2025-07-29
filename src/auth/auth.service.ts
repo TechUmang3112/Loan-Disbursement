@@ -8,8 +8,9 @@ import {
 import * as bcrypt from 'bcrypt';
 import { OtpDto } from '../otp/otp.dto';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from '@/auth/login.dto';
-import { SignUpDto } from '@/auth/auth.dto';
+import { BasicDto } from '../dto/basic.dto';
+import { LoginDto } from '../dto/login.dto';
+import { SignUpDto } from '../dto/auth.dto';
 import { Injectable } from '@nestjs/common';
 import { OtpService } from '../otp/otp.service';
 import { crypt } from '@/common/utils/cryptService';
@@ -47,6 +48,7 @@ export class AuthService {
     const address = '';
     const aadhar_number = '';
     const pan_number = '';
+    const full_name = '';
     await this.usersService.createUser({
       email,
       user_name,
@@ -58,6 +60,7 @@ export class AuthService {
       address,
       aadhar_number,
       pan_number,
+      full_name,
     });
 
     return {
@@ -180,8 +183,6 @@ export class AuthService {
       return raiseUnauthorized('Invalid email or password.');
     }
 
-    console.log({ user });
-    // Check default value alter
     if (user.is_email_verified == 0) {
       return raiseUnauthorized('Please verify your email to log in.');
     }
@@ -200,4 +201,6 @@ export class AuthService {
       },
     };
   }
+
+  async basicDetails(body: BasicDto) {}
 }

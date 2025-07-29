@@ -1,6 +1,5 @@
 //imports
 import { UserAttributes } from '@/users/users.attributes';
-import { SmallIntegerDataType } from 'sequelize';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({ tableName: 'users' })
@@ -38,9 +37,27 @@ export class User extends Model<UserAttributes> implements UserAttributes {
   @Column({ type: DataType.STRING, allowNull: true })
   declare aadhar_number: string;
 
+  @Column({ type: DataType.SMALLINT, defaultValue: 0 })
+  declare is_aadhar_verified: number;
+
   @Column({ type: DataType.STRING, allowNull: true })
   declare pan_number: string;
 
   @Column({ type: DataType.SMALLINT, defaultValue: 0 })
   declare is_pan_verified: number;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare full_name: string;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  declare salary_statement_path: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare company_name: string;
+
+  @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
+  declare loan_amount: number;
+
+  @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
+  declare disburse_amount: number;
 }

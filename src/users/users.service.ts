@@ -35,6 +35,7 @@ export class UsersService {
     address: string;
     aadhar_number: string;
     pan_number: string;
+    full_name: string;
   }) {
     return this.userModel.create(data as any);
   }
