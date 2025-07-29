@@ -60,4 +60,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
 
   @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
   declare disburse_amount: number;
+
+  @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
+  declare salary: number;
 }

@@ -1,6 +1,6 @@
 // Imports
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import AuthService from './auth.service';
 import AuthController from './auth.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { OtpModule } from '../otp/otp.module';
@@ -23,7 +23,7 @@ import { User } from '../users/users.model';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET', 'default_secret'),
-        signOptions: { expiresIn: '1h' },
+        signOptions: { expiresIn: '8h' },
       }),
       inject: [ConfigService],
     }),

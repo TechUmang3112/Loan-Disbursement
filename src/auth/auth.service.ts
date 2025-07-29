@@ -18,7 +18,7 @@ import { UsersService } from '../users/users.service';
 import { getISTDate } from '../common/utils/time.util';
 
 @Injectable()
-export class AuthService {
+export default class AuthService {
   constructor(
     private usersService: UsersService,
     private otpService: OtpService,
@@ -45,10 +45,7 @@ export class AuthService {
     const hashedPassword = await crypt(password);
 
     const { otp, otp_timer, max_retry } = this.otpService.generateOtpPayload();
-    const address = '';
-    const aadhar_number = '';
-    const pan_number = '';
-    const full_name = '';
+
     await this.usersService.createUser({
       email,
       user_name,
@@ -57,10 +54,6 @@ export class AuthService {
       otp,
       otp_timer,
       max_retry,
-      address,
-      aadhar_number,
-      pan_number,
-      full_name,
     });
 
     return {
@@ -106,7 +99,7 @@ export class AuthService {
         max_retry: user.max_retry + 1,
       });
 
-      return raiseBadReq('Invalid OTP. Please try again.');
+      return raiseUnauthorized('Invalid OTP. Please try again.');
     }
 
     await this.usersService.updateUser(email, {
@@ -202,5 +195,22 @@ export class AuthService {
     };
   }
 
-  async basicDetails(body: BasicDto) {}
+  async basicDetails(body: BasicDto, email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      return raiseNotFound('User not found');
+    }
+
+    await this.usersService.updateUser(email, {
+      address: body.address,
+      aadhar_number: body.aadhar_number,
+      pan_number: body.pan_number,
+      full_name: body.full_name,
+      loan_amount: body.loan_amount,
+      salary: body.salary,
+      company_name: body.company_name,
+    });
+
+    return { message: 'Basic details updated successfully' };
+  }
 }

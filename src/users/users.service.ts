@@ -32,10 +32,6 @@ export class UsersService {
     otp: string;
     otp_timer: Date;
     max_retry: number;
-    address: string;
-    aadhar_number: string;
-    pan_number: string;
-    full_name: string;
   }) {
     return this.userModel.create(data as any);
   }

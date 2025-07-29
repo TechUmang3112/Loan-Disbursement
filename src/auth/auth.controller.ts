@@ -2,7 +2,7 @@
 import { LoginDto } from '../dto/login.dto';
 import { SignUpDto } from '../dto/auth.dto';
 import { OtpDto } from '../otp/otp.dto';
-import { AuthService } from './auth.service';
+import AuthService from './auth.service';
 import { Controller, Post, Body } from '@nestjs/common';
 import { BasicDto } from '../dto/basic.dto';
 
@@ -12,7 +12,7 @@ export default class AuthController {
 
   @Post('signup')
   // change signUpDto to body
-  async signUp(@Body() signUpDto: SignUpDto, res) {
+  async signUp(@Body() signUpDto: SignUpDto) {
     return await this.service.signUp(signUpDto);
   }
 
@@ -32,7 +32,7 @@ export default class AuthController {
   }
 
   @Post('basicdetails')
-  async basicDetails(@Body() BasicDto: BasicDto) {
-    return await this.service.basicDetails(BasicDto);
+  async basicDetails(@Body() body: BasicDto) {
+    return await this.service.basicDetails(body, body.email);
   }
 }

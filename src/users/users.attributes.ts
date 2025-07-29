@@ -15,6 +15,7 @@ export interface UserAttributes {
   is_pan_verified: number;
   full_name: string;
   salary_statement_path: string;
+  salary: number;
   loan_amount: number;
   disburse_amount: number;
   company_name: string;
