@@ -70,24 +70,17 @@ export default class AuthService {
       return raiseNotFound('User not found');
     }
 
-    if (user.is_email_verified == 1 && user.is_mobile_verified == 1) {
-      raiseBadReq('Email and Mobile are already verified');
-    }
-
-    if (!user.otp_timer || isNaN(new Date(user.otp_timer).getTime())) {
+    const otpIssuedAt = user?.otp_timer ? new Date(user.otp_timer) : null;
+    if (!otpIssuedAt || isNaN(otpIssuedAt.getTime())) {
       return raiseBadReq('OTP generation time is missing or invalid.');
     }
 
-    const lastOtpTime = user.otp_timer ? new Date(user.otp_timer) : null;
+    const expiresAt = new Date(otpIssuedAt.getTime() + 5 * 60 * 1000);
 
-    if (lastOtpTime) {
-      const current_time = new Date();
-      const otp_expire_time = new Date(user?.otp_timer);
-
-      if (otp_expire_time > current_time) {
-        return raiseBadReq('OTP has expired. Please request a new one.');
-      }
+    if (Date.now() >= expiresAt.getTime()) {
+      return raiseBadReq('OTP has expired. Please request a new one.');
     }
+
     if (user.max_retry >= 3) {
       return raiseTooManyReq(
         'Maximum retry limit reached. Please request OTP again after 5 minutes.',
@@ -102,17 +95,44 @@ export default class AuthService {
       return raiseUnauthorized('Invalid OTP. Please try again.');
     }
 
-    await this.usersService.updateUser(email, {
-      is_email_verified:
-        user.is_email_verified === 0 ? 1 : user.is_email_verified,
-      is_mobile_verified:
-        user.is_mobile_verified === 0 ? 1 : user.is_mobile_verified,
+    const isKycAvailable =
+      user.aadhar_number && user.pan_number && user.full_name && user.salary;
+
+    let updateFields: any = {
       otp: null,
       otp_timer: null,
       max_retry: 0,
-    });
+    };
 
-    return { message: 'OTP verified successfully. Email is now verified.' };
+    if (user.is_email_verified === 0) {
+      updateFields.is_email_verified = 1;
+      await this.usersService.updateUser(email, updateFields);
+      return { message: 'Email verified successfully' };
+    }
+
+    if (user.is_email_verified === 1 && user.is_mobile_verified === 0) {
+      updateFields.is_mobile_verified = 1;
+      await this.usersService.updateUser(email, updateFields);
+      return { message: 'Mobile verified successfully' };
+    }
+
+    if (
+      user.is_mobile_verified === 1 &&
+      user.is_aadhar_verified === 0 &&
+      isKycAvailable
+    ) {
+      updateFields.is_aadhar_verified = 1;
+      await this.usersService.updateUser(email, updateFields);
+      return { message: 'Aadhaar verified successfully' };
+    }
+
+    if (user.is_aadhar_verified === 1 && user.is_pan_verified === 0) {
+      updateFields.is_pan_verified = 1;
+      await this.usersService.updateUser(email, updateFields);
+      return { message: 'PAN verified successfully' };
+    }
+
+    return { message: 'All verifications already completed.' };
   }
 
   async resendOtp(email: string) {
@@ -121,17 +141,26 @@ export default class AuthService {
       return raiseNotFound('User not found');
     }
 
-    if (user.is_email_verified == 1 && user.is_mobile_verified == 1) {
-      raiseBadReq('Email and Mobile are already verified');
+    const isKycAvailable =
+      user.aadhar_number &&
+      user.pan_number &&
+      user.full_name &&
+      user.company_name;
+
+    if (user.is_email_verified === 0) {
+    } else if (user.is_mobile_verified === 0) {
+    } else if (user.is_mobile_verified === 1 && user.is_aadhar_verified === 0) {
+      if (!isKycAvailable) {
+        return raiseBadReq(
+          'Please provide basic KYC details before verifying Aadhaar.',
+        );
+      }
+    } else if (user.is_aadhar_verified === 1 && user.is_pan_verified === 0) {
+    } else {
+      return raiseBadReq('All verifications are already completed.');
     }
 
-    const lastOtpTime = user.otp_timer ? new Date(user.otp_timer) : null;
-
-    if (lastOtpTime) {
-      if (!user.otp_timer) {
-        return raiseNotFound('OTP timer not found. Please request a new OTP.');
-      }
-
+    if (user.otp_timer) {
       const nowIST = getISTDate(new Date());
       const lastOtpIST = getISTDate(new Date(user.otp_timer));
 
@@ -147,6 +176,7 @@ export default class AuthService {
         };
       }
     }
+
     const newOtp = this.otpService.generateOtp();
 
     await this.usersService.updateUser(email, {
