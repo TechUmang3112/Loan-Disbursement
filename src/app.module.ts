@@ -1,12 +1,14 @@
 // imports
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppService } from './app.service';
 import { OtpModule } from './otp/otp.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { KycModule } from './kyc/kyc.module';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { UsersModule } from './users/users.module';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { UploadsModule } from '@/uploads/uploads.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ProductionGuard } from '@/middleware/production.guard';
 
 @Module({
@@ -23,11 +25,13 @@ import { ProductionGuard } from '@/middleware/production.guard';
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
         autoLoadModels: true,
-        synchronize: true,
+        synchronize: false,
       }),
     }),
     AuthModule,
     UsersModule,
+    KycModule,
+    UploadsModule,
     OtpModule,
   ],
   controllers: [AppController],

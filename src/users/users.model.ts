@@ -63,4 +63,16 @@ export class User extends Model<UserAttributes> implements UserAttributes {
 
   @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
   declare salary: number;
+
+  @Column({ type: DataType.DATEONLY, allowNull: true })
+  declare dob: string | null;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare gender: string;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  declare aadhar_card_path: string;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  declare path_card_path: string;
 }

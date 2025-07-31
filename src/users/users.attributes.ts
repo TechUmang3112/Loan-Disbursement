@@ -19,4 +19,6 @@ export interface UserAttributes {
   loan_amount: number;
   disburse_amount: number;
   company_name: string;
+  dob: string | null;
+  gender: string;
 }

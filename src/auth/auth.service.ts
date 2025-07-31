@@ -239,6 +239,8 @@ export default class AuthService {
       loan_amount: body.loan_amount,
       salary: body.salary,
       company_name: body.company_name,
+      dob: body.dob,
+      gender: body.gender,
     });
 
     return { message: 'Basic details updated successfully' };
