@@ -11,12 +11,12 @@ import {
   ParseIntPipe,
   Req,
 } from '@nestjs/common';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import { makeMulterOptions } from './multer.config';
-import { UploadsService } from './uploads.service';
+import { join } from 'path';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
-import { join } from 'path';
+import { UploadsService } from './uploads.service';
+import { makeMulterOptions } from './multer.config';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('kyc/:kycId/uploads')
 export class UploadsController {
@@ -29,7 +29,7 @@ export class UploadsController {
     @UploadedFiles() files: Express.Multer.File[],
     @Req() req: any,
   ) {
-    const userId = req.user?.id || 1; // hardcode for now if no auth
+    const userId = req.user?.id || 1;
     return this.uploadsService.saveFiles(kycId, userId, files);
   }
 

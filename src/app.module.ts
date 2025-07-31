@@ -8,8 +8,8 @@ import { UsersModule } from './users/users.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UploadsModule } from '@/uploads/uploads.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ProductionGuard } from '@/middleware/production.guard';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
 @Module({
   imports: [

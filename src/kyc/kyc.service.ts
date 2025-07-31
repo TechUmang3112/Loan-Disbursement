@@ -1,7 +1,8 @@
 // Imports
 import { Kyc } from './kyc.model';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { raiseNotFound } from '@/config/error.config';
 
 @Injectable()
 export class KycService {
@@ -13,7 +14,7 @@ export class KycService {
 
   async getById(kycId: number) {
     const kyc = await this.kycModel.findByPk(kycId);
-    if (!kyc) throw new NotFoundException('KYC not found');
+    if (!kyc) throw new raiseNotFound('KYC not found');
     return kyc;
   }
 

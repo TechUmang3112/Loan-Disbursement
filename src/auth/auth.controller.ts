@@ -1,10 +1,10 @@
 // Imports
-import { LoginDto } from '../dto/login.dto';
-import { SignUpDto } from '../dto/auth.dto';
 import { OtpDto } from '../otp/otp.dto';
 import AuthService from './auth.service';
-import { Controller, Post, Body } from '@nestjs/common';
+import { LoginDto } from '../dto/login.dto';
+import { SignUpDto } from '../dto/auth.dto';
 import { BasicDto } from '../dto/basic.dto';
+import { Controller, Post, Body } from '@nestjs/common';
 
 @Controller('auth')
 export default class AuthController {

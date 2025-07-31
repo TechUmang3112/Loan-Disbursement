@@ -1,15 +1,15 @@
 // Imports
+import { JwtModule } from '@nestjs/jwt';
 import { Module } from '@nestjs/common';
 import AuthService from './auth.service';
-import AuthController from './auth.controller';
-import { SequelizeModule } from '@nestjs/sequelize';
-import { OtpModule } from '../otp/otp.module';
-import { UsersModule } from '../users/users.module';
-import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from '../middleware/jwt/jwt.strategy';
-import { PassportModule } from '@nestjs/passport';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../users/users.model';
+import { OtpModule } from '../otp/otp.module';
+import AuthController from './auth.controller';
+import { PassportModule } from '@nestjs/passport';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { UsersModule } from '../users/users.module';
+import { JwtStrategy } from '../middleware/jwt/jwt.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [

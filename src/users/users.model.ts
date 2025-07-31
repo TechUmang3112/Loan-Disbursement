@@ -1,4 +1,4 @@
-//imports
+// Imports
 import { UserAttributes } from '@/users/users.attributes';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 

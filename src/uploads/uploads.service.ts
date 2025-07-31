@@ -1,10 +1,11 @@
 // Imports
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { promises as fs } from 'fs';
+import { relative, join } from 'path';
 import { Upload } from './upload.model';
 import { Kyc } from '..//kyc/kyc.model';
-import { relative, join } from 'path';
-import { promises as fs } from 'fs';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/sequelize';
+import { raiseNotFound } from '@/config/error.config';
 
 @Injectable()
 export class UploadsService {
@@ -19,7 +20,7 @@ export class UploadsService {
 
   async saveFiles(kycId: number, userId: number, files: Express.Multer.File[]) {
     const kyc = await this.kycModel.findByPk(kycId);
-    if (!kyc) throw new NotFoundException('KYC not found');
+    if (!kyc) return raiseNotFound('KYC not found');
 
     const records = await Promise.all(
       files.map((file) =>
@@ -49,7 +50,7 @@ export class UploadsService {
     const record = await this.uploadModel.findOne({
       where: { kycId, id: uploadId },
     });
-    if (!record) throw new NotFoundException('File not found');
+    if (!record) throw new raiseNotFound('File not found');
     return record;
   }
 

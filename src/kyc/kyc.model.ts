@@ -11,7 +11,7 @@ import {
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
 import { User } from '..//users/users.model';
-// import { Upload } from 'src/uploads/upload.model';
+import { Upload } from '../uploads/upload.model';
 
 export interface KycAttributes {
   id: number;
@@ -48,6 +48,6 @@ export class Kyc extends Model<KycAttributes, KycCreationAttributes> {
   @BelongsTo(() => User)
   declare user: User;
 
-  // @HasMany(() => Upload)
-  // declare uploads: Upload[];
+  @HasMany(() => Upload)
+  declare uploads: Upload[];
 }

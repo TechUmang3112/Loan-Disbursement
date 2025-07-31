@@ -1,5 +1,6 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+// Imports
 import { NextFunction } from 'express';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 
 @Injectable()
 export class ProductionGuard implements NestMiddleware {
