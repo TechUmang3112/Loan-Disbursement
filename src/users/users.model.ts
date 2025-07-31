@@ -4,6 +4,9 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({ tableName: 'users' })
 export class User extends Model<UserAttributes> implements UserAttributes {
+  @Column({ type: DataType.INTEGER, autoIncrement: true, primaryKey: true })
+  declare id: number;
+
   @Column({ type: DataType.STRING, allowNull: false, unique: true })
   declare email: string;
 

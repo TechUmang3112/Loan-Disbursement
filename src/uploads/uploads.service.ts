@@ -1,9 +1,11 @@
 // Imports
+import { Op } from 'sequelize';
 import { promises as fs } from 'fs';
-import { relative, join } from 'path';
 import { Upload } from './upload.model';
 import { Kyc } from '..//kyc/kyc.model';
+import { User } from '..//users/users.model';
 import { Injectable } from '@nestjs/common';
+import { relative, join, resolve } from 'path';
 import { InjectModel } from '@nestjs/sequelize';
 import { raiseNotFound } from '@/config/error.config';
 
@@ -12,6 +14,7 @@ export class UploadsService {
   constructor(
     @InjectModel(Upload) private uploadModel: typeof Upload,
     @InjectModel(Kyc) private kycModel: typeof Kyc,
+    @InjectModel(User) private userModel: typeof User,
   ) {}
 
   private getRelativePath(absPath: string) {
@@ -23,8 +26,8 @@ export class UploadsService {
     if (!kyc) return raiseNotFound('KYC not found');
 
     const records = await Promise.all(
-      files.map((file) =>
-        this.uploadModel.create({
+      files.map(async (file) => {
+        const saved = await this.uploadModel.create({
           kycId,
           userId,
           tag: file.fieldname,
@@ -32,8 +35,26 @@ export class UploadsService {
           path: this.getRelativePath(file.path),
           mimeType: file.mimetype,
           size: file.size,
-        }),
-      ),
+        });
+
+        const tagToColumnMap = {
+          aadhar_card: 'aadhar_card_path',
+          pan_card: 'pan_card_path',
+          salary_statement: 'salary_statement_path',
+        };
+
+        const columnName = tagToColumnMap[file.fieldname];
+        if (columnName) {
+          const absolutePath = resolve(file.path);
+
+          await this.userModel.update(
+            { [columnName]: absolutePath },
+            { where: { id: userId } },
+          );
+        }
+
+        return saved;
+      }),
     );
 
     return records;
