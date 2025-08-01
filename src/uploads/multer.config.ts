@@ -16,6 +16,7 @@ export function makeMulterOptions() {
         const now = new Date();
         const folder = join(
           process.cwd(),
+          'public',
           'uploads',
           'kyc',
           String(kycId),
@@ -31,8 +32,8 @@ export function makeMulterOptions() {
       },
     }),
     limits: {
-      fileSize: 10 * 1024 * 1024, // 10 MB per file
-      files: 10, // max 10 files/request
+      fileSize: 10 * 1024 * 1024,
+      files: 3,
     },
     fileFilter: (_req: any, file: Express.Multer.File, cb: Function) => {
       if (

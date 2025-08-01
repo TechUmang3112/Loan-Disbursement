@@ -1,4 +1,5 @@
 // imports
+import { join } from 'path';
 import { AppService } from './app.service';
 import { OtpModule } from './otp/otp.module';
 import { KycModule } from './kyc/kyc.module';
@@ -6,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { UsersModule } from './users/users.module';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { UploadsModule } from '@/uploads/uploads.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductionGuard } from '@/middleware/production.guard';
@@ -27,6 +29,9 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
         autoLoadModels: true,
         synchronize: false,
       }),
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
     }),
     AuthModule,
     UsersModule,

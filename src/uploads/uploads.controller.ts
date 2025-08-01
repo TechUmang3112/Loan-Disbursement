@@ -29,7 +29,12 @@ export class UploadsController {
     @UploadedFiles() files: Express.Multer.File[],
     @Req() req: any,
   ) {
-    const userId = req.user?.id || 1;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new Error('User ID not found in token. Make sure JWT is passed.');
+    }
+
     return this.uploadsService.saveFiles(kycId, userId, files);
   }
 

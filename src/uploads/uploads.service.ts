@@ -3,9 +3,9 @@ import { Op } from 'sequelize';
 import { promises as fs } from 'fs';
 import { Upload } from './upload.model';
 import { Kyc } from '..//kyc/kyc.model';
-import { User } from '..//users/users.model';
 import { Injectable } from '@nestjs/common';
-import { relative, join, resolve } from 'path';
+import { User } from '..//users/users.model';
+import { relative, join } from 'path';
 import { InjectModel } from '@nestjs/sequelize';
 import { raiseNotFound } from '@/config/error.config';
 
@@ -45,10 +45,10 @@ export class UploadsService {
 
         const columnName = tagToColumnMap[file.fieldname];
         if (columnName) {
-          const absolutePath = resolve(file.path);
+          const relativePath = this.getRelativePath(file.path);
 
           await this.userModel.update(
-            { [columnName]: absolutePath },
+            { [columnName]: relativePath },
             { where: { id: userId } },
           );
         }

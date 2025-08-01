@@ -77,5 +77,5 @@ export class User extends Model<UserAttributes> implements UserAttributes {
   declare aadhar_card_path: string;
 
   @Column({ type: DataType.TEXT, allowNull: true })
-  declare path_card_path: string;
+  declare pan_card_path: string;
 }
