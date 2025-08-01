@@ -4,6 +4,7 @@
 /build
 /markdowns
 /uploads
+/public
 # Logs
 logs
 *.log

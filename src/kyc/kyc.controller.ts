@@ -1,6 +1,6 @@
 // Imports
-import { Controller, Post, Param, Get, ParseIntPipe } from '@nestjs/common';
 import { KycService } from './kyc.service';
+import { Controller, Post, Param, Get, ParseIntPipe } from '@nestjs/common';
 
 @Controller('kyc')
 export class KycController {

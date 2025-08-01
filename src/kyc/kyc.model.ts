@@ -42,8 +42,8 @@ export class Kyc extends Model<KycAttributes, KycCreationAttributes> {
   @Column({ type: DataType.INTEGER, allowNull: false, field: 'user_id' })
   declare userId: number;
 
-  @Column({ type: DataType.STRING, allowNull: false, defaultValue: 'pending' })
-  declare status: string;
+  @Column({ type: DataType.SMALLINT, allowNull: false, defaultValue: 0 })
+  declare status: number;
 
   @BelongsTo(() => User)
   declare user: User;

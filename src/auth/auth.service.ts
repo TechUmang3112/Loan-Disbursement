@@ -13,7 +13,7 @@ import { LoginDto } from '../dto/login.dto';
 import { SignUpDto } from '../dto/auth.dto';
 import { Injectable } from '@nestjs/common';
 import { OtpService } from '../otp/otp.service';
-import { crypt } from '@/common/utils/cryptService';
+import { crypt } from '@/common/utils/crypt.service';
 import { UsersService } from '../users/users.service';
 import { getISTDate } from '../common/utils/time.util';
 
@@ -67,22 +67,22 @@ export default class AuthService {
 
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      return raiseNotFound('User not found');
+      throw new raiseNotFound('User not found');
     }
 
     const otpIssuedAt = user?.otp_timer ? new Date(user.otp_timer) : null;
     if (!otpIssuedAt || isNaN(otpIssuedAt.getTime())) {
-      return raiseBadReq('OTP generation time is missing or invalid.');
+      throw new raiseBadReq('OTP generation time is missing or invalid.');
     }
 
     const expiresAt = new Date(otpIssuedAt.getTime() + 5 * 60 * 1000);
 
     if (Date.now() >= expiresAt.getTime()) {
-      return raiseBadReq('OTP has expired. Please request a new one.');
+      throw new raiseBadReq('OTP has expired. Please request a new one.');
     }
 
     if (user.max_retry >= 3) {
-      return raiseTooManyReq(
+      throw new raiseTooManyReq(
         'Maximum retry limit reached. Please request OTP again after 5 minutes.',
       );
     }
@@ -92,7 +92,7 @@ export default class AuthService {
         max_retry: user.max_retry + 1,
       });
 
-      return raiseUnauthorized('Invalid OTP. Please try again.');
+      throw new raiseUnauthorized('Invalid OTP. Please try again.');
     }
 
     const isKycAvailable =
@@ -138,7 +138,7 @@ export default class AuthService {
   async resendOtp(email: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      return raiseNotFound('User not found');
+      throw new raiseNotFound('User not found');
     }
 
     const isKycAvailable =
@@ -151,13 +151,13 @@ export default class AuthService {
     } else if (user.is_mobile_verified === 0) {
     } else if (user.is_mobile_verified === 1 && user.is_aadhar_verified === 0) {
       if (!isKycAvailable) {
-        return raiseBadReq(
+        throw new raiseBadReq(
           'Please provide basic KYC details before verifying Aadhaar.',
         );
       }
     } else if (user.is_aadhar_verified === 1 && user.is_pan_verified === 0) {
     } else {
-      return raiseBadReq('All verifications are already completed.');
+      throw new raiseBadReq('All verifications are already completed.');
     }
 
     if (user.otp_timer) {
@@ -193,21 +193,21 @@ export default class AuthService {
     const { email, password } = loginDto;
 
     if (!email || !password) {
-      raiseBadReq('Email and password are required.');
+      throw new raiseBadReq('Email and password are required.');
     }
 
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      return raiseNotFound('User not found. Please sign up first.');
+      throw new raiseNotFound('User not found. Please sign up first.');
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password);
     if (!passwordMatches) {
-      return raiseUnauthorized('Invalid email or password.');
+      throw new raiseUnauthorized('Invalid email or password.');
     }
 
     if (user.is_email_verified == 0) {
-      return raiseUnauthorized('Please verify your email to log in.');
+      throw new raiseUnauthorized('Please verify your email to log in.');
     }
 
     const payload = { sub: user.id, email: user.email };
@@ -228,7 +228,7 @@ export default class AuthService {
   async basicDetails(body: BasicDto, email: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      return raiseNotFound('User not found');
+      throw new raiseNotFound('User not found');
     }
 
     await this.usersService.updateUser(email, {

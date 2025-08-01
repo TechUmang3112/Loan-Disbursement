@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { KycService } from './kyc.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { KycController } from '../kyc/kyc.controller';
+import { KycDto } from '@/dto/kyc.dto';
 
 @Module({
   imports: [SequelizeModule.forFeature([Kyc])],

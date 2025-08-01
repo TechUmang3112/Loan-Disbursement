@@ -3,11 +3,12 @@ import { Op } from 'sequelize';
 import { User } from './users.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { raiseBadReq } from '@/config/error.config';
 
 @Injectable()
 export class UsersService {
   otp(arg0: { otp: string }) {
-    throw new Error('Method not implemented.');
+    throw new raiseBadReq('Method not implemented.');
   }
   constructor(
     @InjectModel(User)

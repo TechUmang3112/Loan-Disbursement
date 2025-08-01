@@ -78,4 +78,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
 
   @Column({ type: DataType.TEXT, allowNull: true })
   declare pan_card_path: string;
+
+  @Column({ type: DataType.SMALLINT, defaultValue: 0 })
+  declare kyc_status: number;
 }
