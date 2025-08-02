@@ -16,7 +16,7 @@ import { Upload } from '../uploads/upload.model';
 export interface KycAttributes {
   id: number;
   userId: number;
-  status: string;
+  status: number;
   created_at?: Date;
   updated_at?: Date;
 }

@@ -63,11 +63,11 @@ export class UploadsController {
     createReadStream(absPath).pipe(res);
   }
 
-  @Delete(':uploadId')
-  async delete(
-    @Param('kycId', ParseIntPipe) kycId: number,
-    @Param('uploadId', ParseIntPipe) uploadId: number,
-  ) {
-    return this.uploadsService.remove(kycId, uploadId);
-  }
+  // @Delete(':uploadId')
+  // async delete(
+  //   @Param('kycId', ParseIntPipe) kycId: number,
+  //   @Param('uploadId', ParseIntPipe) uploadId: number,
+  // ) {
+  //   return this.uploadsService.remove(kycId, uploadId);
+  // }
 }

@@ -95,8 +95,8 @@ export default class AuthService {
       throw new raiseUnauthorized('Invalid OTP. Please try again.');
     }
 
-    const isKycAvailable =
-      user.aadhar_number && user.pan_number && user.full_name && user.salary;
+    // const isKycAvailable =
+    //   user.aadhar_number && user.pan_number && user.full_name && user.salary;
 
     let updateFields: any = {
       otp: null,
@@ -116,23 +116,26 @@ export default class AuthService {
       return { message: 'Mobile verified successfully' };
     }
 
-    if (
-      user.is_mobile_verified === 1 &&
-      user.is_aadhar_verified === 0 &&
-      isKycAvailable
-    ) {
-      updateFields.is_aadhar_verified = 1;
-      await this.usersService.updateUser(email, updateFields);
-      return { message: 'Aadhaar verified successfully' };
-    }
+    // if (
+    //   user.is_mobile_verified === 1 &&
+    //   user.is_aadhar_verified === 0 &&
+    //   isKycAvailable
+    // ) {
+    //   updateFields.is_aadhar_verified = 1;
+    //   await this.usersService.updateUser(email, updateFields);
+    //   return { message: 'Aadhaar verified successfully' };
+    // }
 
-    if (user.is_aadhar_verified === 1 && user.is_pan_verified === 0) {
-      updateFields.is_pan_verified = 1;
-      await this.usersService.updateUser(email, updateFields);
-      return { message: 'PAN verified successfully' };
-    }
+    // if (user.is_aadhar_verified === 1 && user.is_pan_verified === 0) {
+    //   updateFields.is_pan_verified = 1;
+    //   await this.usersService.updateUser(email, updateFields);
+    //   return { message: 'PAN verified successfully' };
+    // }
 
-    return { message: 'All verifications already completed.' };
+    return {
+      message:
+        'Now you can enter your basic details then you can proceed to complete your KYC',
+    };
   }
 
   async resendOtp(email: string) {
@@ -142,10 +145,7 @@ export default class AuthService {
     }
 
     const isKycAvailable =
-      user.aadhar_number &&
-      user.pan_number &&
-      user.full_name &&
-      user.company_name;
+      user.aadhar_number && user.pan_number && user.full_name && user.salary;
 
     if (user.is_email_verified === 0) {
     } else if (user.is_mobile_verified === 0) {

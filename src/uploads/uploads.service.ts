@@ -75,14 +75,14 @@ export class UploadsService {
     return record;
   }
 
-  async remove(kycId: number, uploadId: number) {
-    const record = await this.getOne(kycId, uploadId);
+  // async remove(kycId: number, uploadId: number) {
+  //   const record = await this.getOne(kycId, uploadId);
 
-    try {
-      await fs.unlink(join(process.cwd(), record.path));
-    } catch {}
+  //   try {
+  //     await fs.unlink(join(process.cwd(), record.path));
+  //   } catch {}
 
-    await record.destroy();
-    return { deleted: true };
-  }
+  //   await record.destroy();
+  //   return { deleted: true };
+  // }
 }

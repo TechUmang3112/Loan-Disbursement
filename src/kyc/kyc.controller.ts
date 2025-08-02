@@ -1,14 +1,33 @@
 // Imports
+import { KycDto } from '@/dto/kyc.dto';
 import { KycService } from './kyc.service';
-import { Controller, Post, Param, Get, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  Get,
+  ParseIntPipe,
+  Body,
+  Patch,
+} from '@nestjs/common';
 
 @Controller('kyc')
 export class KycController {
   constructor(private readonly kycService: KycService) {}
 
-  @Post(':userId')
-  async create(@Param('userId', ParseIntPipe) userId: number) {
-    return this.kycService.createKyc(userId);
+  @Post()
+  async create(@Body() body: KycDto) {
+    return this.kycService.createKyc(body);
+  }
+
+  @Patch('verify/:userId')
+  async verifyKyc(@Param('userId', ParseIntPipe) userId: number) {
+    return this.kycService.verifyKyc(userId);
+  }
+
+  @Get(':kycId')
+  async getById(@Param('kycId', ParseIntPipe) kycId: number) {
+    return this.kycService.getById(kycId);
   }
 
   @Get('user/:userId')

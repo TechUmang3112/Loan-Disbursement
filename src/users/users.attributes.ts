@@ -22,4 +22,5 @@ export interface UserAttributes {
   company_name: string;
   dob: string | null;
   gender: string;
+  kyc_status: number;
 }
