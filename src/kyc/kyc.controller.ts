@@ -25,6 +25,11 @@ export class KycController {
     return this.kycService.verifyKyc(userId);
   }
 
+  @Patch('reject/:userId')
+  async rejectKyc(@Param('userId', ParseIntPipe) userId: number) {
+    return this.kycService.rejectKyc(userId);
+  }
+
   @Get(':kycId')
   async getById(@Param('kycId', ParseIntPipe) kycId: number) {
     return this.kycService.getById(kycId);

@@ -1,10 +1,12 @@
 // Imports
 import { Kyc } from './kyc.model';
+import { KycDto } from '@/dto/kyc.dto';
+import { User } from '@/users/users.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { raiseNotFound } from '@/config/error.config';
-import { User } from '@/users/users.model';
-import { KycDto } from '@/dto/kyc.dto';
+import { KycStatus } from '@/common/enums/kycStatus.enum';
+import { VerificationStatus } from '@/common/enums/verificationsStatus.enum';
 
 @Injectable()
 export class KycService {
@@ -55,10 +57,29 @@ export class KycService {
     const user = await this.userModel.findByPk(userId);
     if (!user) throw new raiseNotFound('User not found');
 
-    await this.userModel.update({ kyc_status: 1 }, { where: { id: userId } });
+    await this.userModel.update(
+      {
+        kyc_status: KycStatus.Verified,
+        is_aadhar_verified: VerificationStatus.VERIFIED,
+        is_pan_verified: VerificationStatus.VERIFIED,
+      },
+      { where: { id: userId } },
+    );
 
     await this.kycModel.update({ status: 1 }, { where: { userId } });
 
     return { message: 'KYC verified successfully' };
+  }
+
+  async rejectKyc(userId: number) {
+    const user = await this.userModel.findByPk(userId);
+    if (!user) throw raiseNotFound('User not found');
+
+    await this.userModel.update(
+      { kyc_status: KycStatus.Rejected },
+      { where: { id: userId } },
+    );
+
+    return { message: 'KYC status updated to rejected' };
   }
 }

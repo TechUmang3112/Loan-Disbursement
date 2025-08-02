@@ -1,6 +1,8 @@
 // Imports
 import { UserAttributes } from '@/users/users.attributes';
+import { KycStatus } from '@/common/enums/kycStatus.enum';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { VerificationStatus } from '@/common/enums/verificationsStatus.enum';
 
 @Table({ tableName: 'users' })
 export class User extends Model<UserAttributes> implements UserAttributes {
@@ -40,14 +42,8 @@ export class User extends Model<UserAttributes> implements UserAttributes {
   @Column({ type: DataType.STRING, allowNull: true })
   declare aadhar_number: string;
 
-  @Column({ type: DataType.SMALLINT, defaultValue: 0 })
-  declare is_aadhar_verified: number;
-
   @Column({ type: DataType.STRING, allowNull: true })
   declare pan_number: string;
-
-  @Column({ type: DataType.SMALLINT, defaultValue: 0 })
-  declare is_pan_verified: number;
 
   @Column({ type: DataType.STRING, allowNull: true })
   declare full_name: string;
@@ -79,6 +75,18 @@ export class User extends Model<UserAttributes> implements UserAttributes {
   @Column({ type: DataType.TEXT, allowNull: true })
   declare pan_card_path: string;
 
-  @Column({ type: DataType.SMALLINT, defaultValue: 0 })
-  declare kyc_status: number;
+  @Column({ type: DataType.SMALLINT, defaultValue: KycStatus.Pending })
+  declare kyc_status: KycStatus;
+
+  @Column({
+    type: DataType.SMALLINT,
+    defaultValue: VerificationStatus.NOT_VERIFIED,
+  })
+  declare is_aadhar_verified: VerificationStatus;
+
+  @Column({
+    type: DataType.SMALLINT,
+    defaultValue: VerificationStatus.NOT_VERIFIED,
+  })
+  declare is_pan_verified: VerificationStatus;
 }
