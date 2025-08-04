@@ -20,7 +20,7 @@ export class LoanService {
     const maxEligible = user.salary * 0.25;
     if (amount > maxEligible) {
       throw raiseBadReq(
-        `Loan amount exceeds 25% of salary. Max allowed: ₹${maxEligible}`,
+        'Loan amount exceeds 25% of salary. Max allowed: ₹${maxEligible}',
       );
     }
 
@@ -41,7 +41,7 @@ export class LoanService {
     });
 
     return {
-      message: 'Loan offer created successfully',
+      message: 'Loan offered successfully',
       loanDetails: loan,
     };
   }
