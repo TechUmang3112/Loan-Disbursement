@@ -4,8 +4,8 @@ import { KycDto } from '@/dto/kyc.dto';
 import { User } from '@/users/users.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { raiseNotFound } from '@/config/error.config';
 import { KycStatus } from '@/common/enums/kycStatus.enum';
+import { raiseNotFound, raiseOk } from '@/config/error.config';
 import { VerificationStatus } from '@/common/enums/verificationsStatus.enum';
 
 @Injectable()
@@ -31,6 +31,7 @@ export class KycService {
         dob: body.dob,
         gender: body.gender,
         kyc_status: 0,
+        tenure_months: body.tenure_months,
       },
       { where: { id: user.id } },
     );
@@ -68,7 +69,7 @@ export class KycService {
 
     await this.kycModel.update({ status: 1 }, { where: { userId } });
 
-    return { message: 'KYC verified successfully' };
+    return raiseOk('KYC verified successfully');
   }
 
   async rejectKyc(userId: number) {
@@ -80,6 +81,6 @@ export class KycService {
       { where: { id: userId } },
     );
 
-    return { message: 'KYC status updated to rejected' };
+    return raiseOk('KYC status updated to rejected');
   }
 }

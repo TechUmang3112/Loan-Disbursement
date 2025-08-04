@@ -7,6 +7,7 @@ import {
   IsEmail,
   IsOptional,
   IsDateString,
+  IsNotEmpty,
 } from 'class-validator';
 
 export class KycDto {
@@ -60,4 +61,8 @@ export class KycDto {
   @IsString()
   @MaxLength(50)
   gender?: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  tenure_months: number;
 }

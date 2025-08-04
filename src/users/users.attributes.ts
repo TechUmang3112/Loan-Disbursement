@@ -23,4 +23,5 @@ export interface UserAttributes {
   dob: string | null;
   gender: string;
   kyc_status: number;
+  tenure_months: number;
 }

@@ -89,4 +89,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     defaultValue: VerificationStatus.NOT_VERIFIED,
   })
   declare is_pan_verified: VerificationStatus;
+
+  @Column({ type: DataType.SMALLINT, allowNull: true })
+  declare tenure_months: number;
 }

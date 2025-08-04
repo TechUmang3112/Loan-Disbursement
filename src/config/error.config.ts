@@ -28,3 +28,7 @@ export function raiseUnauthorized(err_msg: string) {
     HttpStatus.UNAUTHORIZED,
   );
 }
+
+export function raiseOk(err_msg: string) {
+  throw new HttpException({ success: true, message: err_msg }, HttpStatus.OK);
+}
