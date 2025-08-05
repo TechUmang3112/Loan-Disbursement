@@ -95,4 +95,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
 
   @Column({ type: DataType.INTEGER, allowNull: true })
   declare salary_credit_day: number;
+
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare emi_due_day: number;
 }

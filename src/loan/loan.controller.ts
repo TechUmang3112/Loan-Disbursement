@@ -1,16 +1,28 @@
 // Imports
+import {
+  Controller,
+  Patch,
+  Param,
+  ParseIntPipe,
+  Body,
+  Post,
+  Query,
+  Get,
+} from '@nestjs/common';
 import { LoanService } from './loan.service';
 import { LoanOfferDto } from '@/dto/loanOffer.dto';
 import { LoanResponseDto } from '@/dto/loanResponse.dto';
-import { Controller, Patch, Param, ParseIntPipe, Body } from '@nestjs/common';
 
 @Controller('loan')
 export class LoanController {
   constructor(private readonly loanService: LoanService) {}
 
-  @Patch('offer')
-  async offerLoan(@Body() dto: LoanOfferDto) {
-    return this.loanService.offerLoan(dto);
+  @Post('/admin/offerloan/:userId')
+  async offerLoan(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body() LoanOfferDto: LoanOfferDto,
+  ) {
+    return this.loanService.offerLoan(userId, LoanOfferDto);
   }
 
   @Patch('respond/:loanId')
@@ -23,5 +35,10 @@ export class LoanController {
       loanId,
       dto.response,
     );
+  }
+
+  @Get('/list')
+  async listLoansByStatus(@Query('status') status: string) {
+    return this.loanService.listLoansByStatus(status);
   }
 }

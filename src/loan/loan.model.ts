@@ -49,4 +49,7 @@ export class Loan extends Model {
   @Default(3.0)
   @Column({ type: DataType.FLOAT, allowNull: false })
   declare interest_rate: number;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare next_emi_date: Date;
 }

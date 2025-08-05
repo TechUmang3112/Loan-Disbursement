@@ -24,4 +24,5 @@ export interface UserAttributes {
   gender: string;
   kyc_status: number;
   tenure_months: number;
+  emi_due_day?: number;
 }

@@ -32,3 +32,10 @@ export function raiseUnauthorized(err_msg: string) {
 export function raiseOk(err_msg: string) {
   throw new HttpException({ success: true, message: err_msg }, HttpStatus.OK);
 }
+
+export function raiseForbidden(err_msg: string) {
+  throw new HttpException(
+    { success: false, message: err_msg },
+    HttpStatus.FORBIDDEN,
+  );
+}

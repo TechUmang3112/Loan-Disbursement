@@ -3,8 +3,10 @@ import { join } from 'path';
 import { AppService } from './app.service';
 import { OtpModule } from './otp/otp.module';
 import { KycModule } from './kyc/kyc.module';
+import { EmiReminderModule } from '@/cron/emi.module';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UsersModule } from './users/users.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -15,6 +17,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
@@ -38,6 +41,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
     KycModule,
     UploadsModule,
     OtpModule,
+    EmiReminderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

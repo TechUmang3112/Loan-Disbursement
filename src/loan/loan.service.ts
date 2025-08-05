@@ -1,24 +1,31 @@
 // Imports
+import {
+  raiseBadReq,
+  raiseForbidden,
+  raiseNotFound,
+} from '@/config/error.config';
 import { Loan } from './loan.model';
+import { Kyc } from '@/kyc/kyc.model';
 import { Injectable } from '@nestjs/common';
 import { User } from '../users/users.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { LoanOfferDto } from '@/dto/loanOffer.dto';
 import { LoanStatus } from '../common/enums/loanStatus.enum';
-import { raiseBadReq, raiseNotFound } from '@/config/error.config';
 
 @Injectable()
 export class LoanService {
   constructor(
     @InjectModel(Loan) private loanModel: typeof Loan,
     @InjectModel(User) private userModel: typeof User,
+    @InjectModel(Kyc) private kycModel: typeof Kyc,
   ) {}
 
-  async offerLoan(dto: LoanOfferDto) {
+  async offerLoan(userId: number, dto: LoanOfferDto) {
     const user = await this.userModel.findByPk(dto.user_id);
     if (!user) throw raiseNotFound('User not found');
 
-    if (user.kyc_status !== 1) {
+    const kyc = await this.kycModel.findOne({ where: { userId: dto.user_id } });
+    if (!kyc || kyc.status !== 1) {
       throw raiseBadReq('User KYC is not verified');
     }
 
@@ -29,18 +36,19 @@ export class LoanService {
       );
     }
 
-    const rate = 3;
-    const interest = (dto.amount * rate * dto.tenure_months) / 100;
-    const totalPayable = dto.amount + interest;
-    const emi = totalPayable / dto.tenure_months;
+    const interestRate = 3;
+    const totalInterest = (dto.amount * interestRate * dto.tenure_months) / 100;
+    const totalPayable = dto.amount + totalInterest;
+    const monthlyEMI =
+      Math.round((totalPayable / dto.tenure_months) * 100) / 100;
 
     const loan = await this.loanModel.create({
       user_id: dto.user_id,
       amount: dto.amount,
       tenure_months: dto.tenure_months,
-      interest_rate: rate,
-      monthly_emi: parseFloat(emi.toFixed(2)),
-      status: 0,
+      interest_rate: interestRate,
+      monthly_emi: monthlyEMI,
+      status: LoanStatus.OFFERED,
     });
 
     return {
@@ -55,22 +63,45 @@ export class LoanService {
     response: 'approve' | 'reject',
   ) {
     const loan = await this.loanModel.findByPk(loanId);
-
     if (!loan) {
       throw raiseNotFound('Loan not found');
     }
 
     if (loan.user_id !== userId) {
-      throw raiseBadReq('You are not authorized to respond to this loan');
+      throw raiseForbidden('You are not authorized to respond to this loan');
     }
 
-    if (loan.status !== LoanStatus.OFFERED) {
-      throw raiseBadReq('Loan has already been processed');
+    if (loan.status === LoanStatus.APPROVED) {
+      throw raiseBadReq('Loan already approved. You cannot respond again.');
+    }
+
+    if (loan.status === LoanStatus.REJECTED) {
+      throw raiseBadReq('Loan already rejected. You cannot respond again.');
     }
 
     if (response === 'approve') {
       loan.status = LoanStatus.APPROVED;
       loan.disbursed_on = new Date();
+
+      const user = await this.userModel.findByPk(userId);
+      if (!user?.emi_due_day) {
+        throw raiseBadReq('EMI due day is not set for this user');
+      }
+
+      const emiDay = user.emi_due_day;
+      if (emiDay < 1 || emiDay > 28) {
+        throw raiseBadReq('Invalid EMI due day. It must be between 1 and 28.');
+      }
+
+      const today = new Date();
+      const nextEmiDate = new Date(today);
+      nextEmiDate.setDate(emiDay);
+
+      if (nextEmiDate <= today) {
+        nextEmiDate.setMonth(nextEmiDate.getMonth() + 1);
+      }
+
+      loan.next_emi_date = nextEmiDate;
     } else if (response === 'reject') {
       loan.status = LoanStatus.REJECTED;
     } else {
@@ -82,6 +113,32 @@ export class LoanService {
     return {
       message: `Loan ${response}d successfully`,
       updatedLoan: loan,
+    };
+  }
+
+  async listLoansByStatus(status: string) {
+    const statusMap = {
+      offered: LoanStatus.OFFERED,
+      approved: LoanStatus.APPROVED,
+      rejected: LoanStatus.REJECTED,
+    };
+
+    const normalizedStatus = status?.toLowerCase();
+
+    if (!statusMap.hasOwnProperty(normalizedStatus)) {
+      throw raiseBadReq(
+        'Invalid status. Valid values are: offered, approved, rejected.',
+      );
+    }
+
+    const loans = await this.loanModel.findAll({
+      where: { status: statusMap[normalizedStatus] },
+    });
+
+    return {
+      count: loans.length,
+      status: normalizedStatus,
+      loans,
     };
   }
 }
