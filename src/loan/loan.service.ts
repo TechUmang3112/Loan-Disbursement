@@ -3,6 +3,7 @@ import { Loan } from './loan.model';
 import { Injectable } from '@nestjs/common';
 import { User } from '../users/users.model';
 import { InjectModel } from '@nestjs/sequelize';
+import { LoanOfferDto } from '@/dto/loanOffer.dto';
 import { LoanStatus } from '../common/enums/loanStatus.enum';
 import { raiseBadReq, raiseNotFound } from '@/config/error.config';
 
@@ -13,36 +14,38 @@ export class LoanService {
     @InjectModel(User) private userModel: typeof User,
   ) {}
 
-  async offerLoan(userId: number, amount: number) {
-    const user = await this.userModel.findByPk(userId);
+  async offerLoan(dto: LoanOfferDto) {
+    const user = await this.userModel.findByPk(dto.user_id);
     if (!user) throw raiseNotFound('User not found');
 
-    const maxEligible = user.salary * 0.25;
-    if (amount > maxEligible) {
+    if (user.kyc_status !== 1) {
+      throw raiseBadReq('User KYC is not verified');
+    }
+
+    const maxEligibleAmount = user.salary * 0.25;
+    if (dto.amount > maxEligibleAmount) {
       throw raiseBadReq(
-        'Loan amount exceeds 25% of salary. Max allowed: ₹${maxEligible}',
+        `Loan amount exceeds 25% of salary. Max allowed: ₹${maxEligibleAmount}`,
       );
     }
 
-    const interestRate = 3;
-    const tenureMonths = user.tenure_months;
-    const simpleInterest = (amount * interestRate * tenureMonths) / 100;
-    const totalPayable = amount + simpleInterest;
-    const monthlyEmi = parseFloat((totalPayable / tenureMonths).toFixed(2));
+    const rate = 3;
+    const interest = (dto.amount * rate * dto.tenure_months) / 100;
+    const totalPayable = dto.amount + interest;
+    const emi = totalPayable / dto.tenure_months;
 
     const loan = await this.loanModel.create({
-      user_id: userId,
-      amount,
-      interest_rate: interestRate,
-      tenure_months: tenureMonths,
-      monthly_emi: monthlyEmi,
-      status: LoanStatus.OFFERED,
-      disbursed_on: null,
+      user_id: dto.user_id,
+      amount: dto.amount,
+      tenure_months: dto.tenure_months,
+      interest_rate: rate,
+      monthly_emi: parseFloat(emi.toFixed(2)),
+      status: 0,
     });
 
     return {
       message: 'Loan offered successfully',
-      loanDetails: loan,
+      loan_offer: loan,
     };
   }
 

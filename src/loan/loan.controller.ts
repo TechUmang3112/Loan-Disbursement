@@ -1,25 +1,27 @@
 // Imports
 import { LoanService } from './loan.service';
+import { LoanOfferDto } from '@/dto/loanOffer.dto';
+import { LoanResponseDto } from '@/dto/loanResponse.dto';
 import { Controller, Patch, Param, ParseIntPipe, Body } from '@nestjs/common';
 
 @Controller('loan')
 export class LoanController {
   constructor(private readonly loanService: LoanService) {}
 
-  @Patch('offer/:userId')
-  async offerLoan(
-    @Param('userId', ParseIntPipe) userId: number,
-    @Body('amount') amount: number,
-  ) {
-    return this.loanService.offerLoan(userId, amount);
+  @Patch('offer')
+  async offerLoan(@Body() dto: LoanOfferDto) {
+    return this.loanService.offerLoan(dto);
   }
 
   @Patch('respond/:loanId')
   async respondToLoanOffer(
     @Param('loanId', ParseIntPipe) loanId: number,
-    @Body('userId', ParseIntPipe) userId: number,
-    @Body('response') response: 'approve' | 'reject',
+    @Body() dto: LoanResponseDto,
   ) {
-    return this.loanService.respondToLoanOffer(userId, loanId, response);
+    return this.loanService.respondToLoanOffer(
+      dto.userId,
+      loanId,
+      dto.response,
+    );
   }
 }

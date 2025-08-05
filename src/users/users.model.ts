@@ -92,4 +92,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
 
   @Column({ type: DataType.SMALLINT, allowNull: true })
   declare tenure_months: number;
+
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare salary_credit_day: number;
 }
