@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectModel } from '@nestjs/sequelize';
+// Imports
 import { Loan } from '../loan/loan.model';
 import { User } from '../users/users.model';
+import { InjectModel } from '@nestjs/sequelize';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class EmiReminderService {
