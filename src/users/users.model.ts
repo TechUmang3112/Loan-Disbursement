@@ -1,6 +1,7 @@
 // Imports
 import { UserAttributes } from '@/users/users.attributes';
 import { KycStatus } from '@/common/enums/kycStatus.enum';
+import { UserStatus } from '@/common/enums/userStatus.enum';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { VerificationStatus } from '@/common/enums/verificationsStatus.enum';
 
@@ -58,7 +59,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
   declare loan_amount: number;
 
   @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
-  declare disburse_amount: number;
+  declare disbursed_amount: number;
 
   @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
   declare salary: number;
@@ -98,4 +99,13 @@ export class User extends Model<UserAttributes> implements UserAttributes {
 
   @Column({ type: DataType.INTEGER, allowNull: true })
   declare emi_due_day: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: UserStatus.REGISTRATION,
+  })
+  declare user_status: UserStatus;
+
+  @Column({ type: DataType.SMALLINT, defaultValue: 0 })
+  declare salary_verified: number;
 }

@@ -10,6 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from '../users/users.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { LoanOfferDto } from '@/dto/loanOffer.dto';
+import { UserStatus } from '@/common/enums/userStatus.enum';
 import { LoanStatus } from '../common/enums/loanStatus.enum';
 
 @Injectable()
@@ -51,6 +52,15 @@ export class LoanService {
       status: LoanStatus.OFFERED,
     });
 
+    await this.userModel.update(
+      {
+        user_status: UserStatus.LOAN_APPROVED,
+      },
+      {
+        where: { id: userId },
+      },
+    );
+
     return {
       message: 'Loan offered successfully',
       loan_offer: loan,
@@ -81,6 +91,17 @@ export class LoanService {
 
     if (response === 'approve') {
       loan.status = LoanStatus.APPROVED;
+
+      await this.userModel.update(
+        {
+          disbursed_amount: loan.amount,
+          user_status: UserStatus.DISBURSEMENT,
+        },
+        {
+          where: { id: userId },
+        },
+      );
+
       loan.disbursed_on = new Date();
 
       const user = await this.userModel.findByPk(userId);

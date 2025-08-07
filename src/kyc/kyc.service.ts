@@ -5,6 +5,7 @@ import { User } from '@/users/users.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { KycStatus } from '@/common/enums/kycStatus.enum';
+import { UserStatus } from '@/common/enums/userStatus.enum';
 import { raiseNotFound, raiseOk } from '@/config/error.config';
 import { VerificationStatus } from '@/common/enums/verificationsStatus.enum';
 
@@ -32,6 +33,7 @@ export class KycService {
         gender: body.gender,
         kyc_status: 0,
         tenure_months: body.tenure_months,
+        user_status: UserStatus.KYC,
       },
       { where: { id: user.id } },
     );
@@ -63,6 +65,7 @@ export class KycService {
         kyc_status: KycStatus.Verified,
         is_aadhar_verified: VerificationStatus.VERIFIED,
         is_pan_verified: VerificationStatus.VERIFIED,
+        user_status: UserStatus.SALARY_VERIFICATION,
       },
       { where: { id: userId } },
     );

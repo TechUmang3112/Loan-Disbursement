@@ -1,1 +1,8 @@
-export enum userStatus {}
+export enum UserStatus {
+  REGISTRATION = 1,
+  BASIC_DETAILS = 2,
+  KYC = 3,
+  SALARY_VERIFICATION = 4,
+  LOAN_APPROVED = 5,
+  DISBURSEMENT = 6,
+}

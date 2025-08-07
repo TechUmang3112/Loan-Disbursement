@@ -106,6 +106,7 @@ export default class AuthService {
 
     if (user.is_email_verified === 0) {
       updateFields.is_email_verified = 1;
+      updateFields.UserStatus.BASIC_DETAILS;
       await this.usersService.updateUser(email, updateFields);
       return { message: 'Email verified successfully' };
     }

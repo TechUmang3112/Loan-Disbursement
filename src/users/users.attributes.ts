@@ -18,11 +18,13 @@ export interface UserAttributes {
   salary_statement_path: string;
   salary: number;
   loan_amount: number;
-  disburse_amount: number;
+  disbursed_amount: number;
   company_name: string;
   dob: string | null;
   gender: string;
   kyc_status: number;
   tenure_months: number;
-  emi_due_day?: number;
+  emi_due_day: number;
+  user_status: number;
+  salary_verified: number;
 }
