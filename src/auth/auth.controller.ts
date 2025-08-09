@@ -13,7 +13,6 @@ export default class AuthController {
 
   @Public()
   @Post('signup')
-  // change signUpDto to body
   async signUp(@Body() signUpDto: SignUpDto) {
     return await this.service.signUp(signUpDto);
   }
