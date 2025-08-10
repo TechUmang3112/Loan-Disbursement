@@ -14,7 +14,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
   const server_port = process.env.SERVER_PORT ?? 3001;
   await app.listen(server_port);

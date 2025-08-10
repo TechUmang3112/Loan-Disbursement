@@ -4,6 +4,7 @@ import AuthService from './auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { SignUpDto } from '../dto/auth.dto';
 import { BasicDto } from '../dto/basic.dto';
+import { ResendOtpDto } from '../dto/resendOtp.dto';
 import { Controller, Post, Body } from '@nestjs/common';
 import { Public } from '@/middleware/jwt/public.decorator';
 
@@ -31,12 +32,12 @@ export default class AuthController {
 
   @Public()
   @Post('resendOtp')
-  async resendOtp(@Body('email') email: string) {
-    return await this.service.resendOtp(email);
+  async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
+    return await this.service.resendOtp(resendOtpDto.email);
   }
 
   @Post('basicdetails')
-  async basicDetails(@Body() body: BasicDto) {
-    return await this.service.basicDetails(body, body.email);
+  async basicDetails(@Body() basicDto: BasicDto) {
+    return await this.service.basicDetails(basicDto, basicDto.email);
   }
 }

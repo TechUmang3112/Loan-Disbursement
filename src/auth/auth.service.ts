@@ -11,22 +11,31 @@ import { JwtService } from '@nestjs/jwt';
 import { BasicDto } from '../dto/basic.dto';
 import { LoginDto } from '../dto/login.dto';
 import { SignUpDto } from '../dto/auth.dto';
-import { Injectable } from '@nestjs/common';
 import { OtpService } from '../otp/otp.service';
+import { Injectable, Logger } from '@nestjs/common';
 import { crypt } from '@/common/utils/crypt.service';
 import { UsersService } from '../users/users.service';
 import { getISTDate } from '../common/utils/time.util';
+import { UserStatus } from '@/common/enums/userStatus.enum';
+
+const OTP_EXPIRY_MINUTES = 5;
+const OTP_RESEND_COOLDOWN_SECONDS = 60;
+const OTP_MAX_RETRY = 3;
 
 @Injectable()
 export default class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private usersService: UsersService,
     private otpService: OtpService,
     private jwtService: JwtService,
   ) {}
 
-  async signUp(SignUpDto: SignUpDto) {
-    const { email, user_name, password, mobile_number } = SignUpDto;
+  async signUp(signUpDto: SignUpDto) {
+    const { email, user_name, password, mobile_number } = signUpDto;
+
+    this.logger.log(`Signup attempt for ${email}`);
 
     const is_exist = await this.usersService.isExist(
       email,
@@ -43,7 +52,6 @@ export default class AuthService {
     }
 
     const hashedPassword = await crypt(password);
-
     const { otp, otp_timer, max_retry } = this.otpService.generateOtpPayload();
 
     await this.usersService.createUser({
@@ -62,9 +70,10 @@ export default class AuthService {
     };
   }
 
-  async verifyOtp(body: OtpDto) {
-    const { email, otp } = body;
+  async verifyOtp(otpDto: OtpDto) {
+    const { email, otp } = otpDto;
 
+    this.logger.log(`Verify OTP for ${email}`);
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new raiseNotFound('User not found');
@@ -75,13 +84,15 @@ export default class AuthService {
       throw new raiseBadReq('OTP generation time is missing or invalid.');
     }
 
-    const expiresAt = new Date(otpIssuedAt.getTime() + 5 * 60 * 1000);
+    const expiresAt = new Date(
+      otpIssuedAt.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000,
+    );
 
     if (Date.now() >= expiresAt.getTime()) {
       throw new raiseBadReq('OTP has expired. Please request a new one.');
     }
 
-    if (user.max_retry >= 3) {
+    if (user.max_retry >= OTP_MAX_RETRY) {
       throw new raiseTooManyReq(
         'Maximum retry limit reached. Please request OTP again after 5 minutes.',
       );
@@ -95,9 +106,6 @@ export default class AuthService {
       throw new raiseUnauthorized('Invalid OTP. Please try again.');
     }
 
-    // const isKycAvailable =
-    //   user.aadhar_number && user.pan_number && user.full_name && user.salary;
-
     let updateFields: any = {
       otp: null,
       otp_timer: null,
@@ -106,7 +114,15 @@ export default class AuthService {
 
     if (user.is_email_verified === 0) {
       updateFields.is_email_verified = 1;
-      updateFields.UserStatus.BASIC_DETAILS;
+
+      try {
+        updateFields.user_status = UserStatus.BASIC_DETAILS;
+      } catch (e) {
+        this.logger.debug(
+          'UserStatus enum assignment skipped or failed; ensure enum exists if you want user_status to update.',
+        );
+      }
+
       await this.usersService.updateUser(email, updateFields);
       return { message: 'Email verified successfully' };
     }
@@ -117,22 +133,6 @@ export default class AuthService {
       return { message: 'Mobile verified successfully' };
     }
 
-    // if (
-    //   user.is_mobile_verified === 1 &&
-    //   user.is_aadhar_verified === 0 &&
-    //   isKycAvailable
-    // ) {
-    //   updateFields.is_aadhar_verified = 1;
-    //   await this.usersService.updateUser(email, updateFields);
-    //   return { message: 'Aadhaar verified successfully' };
-    // }
-
-    // if (user.is_aadhar_verified === 1 && user.is_pan_verified === 0) {
-    //   updateFields.is_pan_verified = 1;
-    //   await this.usersService.updateUser(email, updateFields);
-    //   return { message: 'PAN verified successfully' };
-    // }
-
     return {
       message:
         'Now you can enter your basic details then you can proceed to complete your KYC',
@@ -140,6 +140,8 @@ export default class AuthService {
   }
 
   async resendOtp(email: string) {
+    this.logger.log(`Resend OTP requested for ${email}`);
+
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new raiseNotFound('User not found');
@@ -150,13 +152,6 @@ export default class AuthService {
 
     if (user.is_email_verified === 0) {
     } else if (user.is_mobile_verified === 0) {
-    } else if (user.is_mobile_verified === 1 && user.is_aadhar_verified === 0) {
-      if (!isKycAvailable) {
-        throw new raiseBadReq(
-          'Please provide basic KYC details before verifying Aadhaar.',
-        );
-      }
-    } else if (user.is_aadhar_verified === 1 && user.is_pan_verified === 0) {
     } else {
       throw new raiseBadReq('All verifications are already completed.');
     }
@@ -169,8 +164,8 @@ export default class AuthService {
         (nowIST.getTime() - lastOtpIST.getTime()) / 1000,
       );
 
-      if (diffInSeconds < 60) {
-        const secondsLeft = 60 - diffInSeconds;
+      if (diffInSeconds < OTP_RESEND_COOLDOWN_SECONDS) {
+        const secondsLeft = OTP_RESEND_COOLDOWN_SECONDS - diffInSeconds;
         return {
           message: 'Please wait before requesting a new OTP.',
           time_left: `${secondsLeft} seconds`,
@@ -189,7 +184,6 @@ export default class AuthService {
     return { message: 'OTP resent successfully' };
   }
 
-  // get required column only
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
