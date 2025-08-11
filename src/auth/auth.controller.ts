@@ -6,7 +6,7 @@ import { SignUpDto } from '../dto/auth.dto';
 import { BasicDto } from '../dto/basic.dto';
 import { ResendOtpDto } from '../dto/resendOtp.dto';
 import { Controller, Post, Body } from '@nestjs/common';
-import { Public } from '@/middleware/jwt/public.decorator';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('auth')
 export default class AuthController {

@@ -16,7 +16,7 @@ import { Response } from 'express';
 import { createReadStream } from 'fs';
 import { UploadsService } from './uploads.service';
 import { makeMulterOptions } from './multer.config';
-import { raiseUnauthorized } from '@/config/error.config';
+import { raiseUnauthorized } from '../config/error.config';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('kyc/:kycId/uploads')
@@ -33,7 +33,7 @@ export class UploadsController {
     const userId = req.user?.id;
 
     if (!userId) {
-      throw new raiseUnauthorized(
+      throw raiseUnauthorized(
         'User ID not found in token. Make sure JWT is passed.',
       );
     }

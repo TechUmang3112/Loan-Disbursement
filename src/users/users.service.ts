@@ -3,27 +3,28 @@ import { Op } from 'sequelize';
 import { User } from './users.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { UserStatus } from '@/common/enums/userStatus.enum';
-import { raiseBadReq, raiseNotFound } from '@/config/error.config';
+import { UserStatus } from '../common/enums/userStatus.enum';
+import { raiseBadReq, raiseNotFound } from '../config/error.config';
 
 @Injectable()
 export class UsersService {
-  otp(arg0: { otp: string }) {
-    throw new raiseBadReq('Method not implemented.');
-  }
+  // otp(arg0: { otp: string }) {
+  //   throw raiseBadReq('Method not implemented.');
+  // }
+
   constructor(
     @InjectModel(User)
     private readonly userModel: typeof User,
   ) {}
 
   async isExist(email: string, mobile_number: string, user_name: string) {
-    const existing_user = await this.userModel.findOne({
+    return await this.userModel.findOne({
       attributes: ['email', 'mobile_number', 'user_name'],
       raw: true,
-      where: { [Op.or]: [{ email }, { mobile_number }, { user_name }] },
+      where: {
+        [Op.or]: [{ email }, { mobile_number }, { user_name }],
+      },
     });
-
-    return existing_user;
   }
 
   async createUser(data: {
@@ -35,37 +36,31 @@ export class UsersService {
     otp_timer: Date;
     max_retry: number;
   }) {
-    return this.userModel.create({
-      data,
+    return await this.userModel.create({
+      ...data,
       user_status: UserStatus.REGISTRATION,
     } as any);
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await this.userModel.findOne({ raw: true, where: { email } });
+    return await this.userModel.findOne({
+      raw: true,
+      where: { email },
+      attributes: [
+        'id',
+        'email',
+        'password',
+        'user_name',
+        'role',
+        'is_email_verified',
+      ],
+    });
   }
 
   async updateUser(email: string, updates: Partial<User>) {
-    return this.userModel.update(updates, { where: { email } });
-  }
-
-  async updateUserStatus(userId: number, status: UserStatus) {
-    const user = await this.userModel.findByPk(userId);
-    if (!user) {
-      throw raiseNotFound('User not found');
-    }
-
-    await this.userModel.update(
-      {
-        user_status: UserStatus.LOAN_APPROVED,
-        salary_verified: 1,
-      },
-      {
-        where: { id: userId },
-      },
-    );
-
-    return { message: 'User salary verification status updated successfully' };
+    return await this.userModel.update(updates, {
+      where: { email },
+    });
   }
 
   async getUserStatus(userId: number) {

@@ -1,9 +1,9 @@
 // Imports
-import { UserAttributes } from '@/users/users.attributes';
-import { KycStatus } from '@/common/enums/kycStatus.enum';
-import { UserStatus } from '@/common/enums/userStatus.enum';
+import { UserAttributes } from '../users/users.attributes';
+import { KycStatus } from '../common/enums/kycStatus.enum';
+import { UserStatus } from '../common/enums/userStatus.enum';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
-import { VerificationStatus } from '@/common/enums/verificationsStatus.enum';
+import { VerificationStatus } from '../common/enums/verificationsStatus.enum';
 
 @Table({ tableName: 'users' })
 export class User extends Model<UserAttributes> implements UserAttributes {
@@ -108,4 +108,11 @@ export class User extends Model<UserAttributes> implements UserAttributes {
 
   @Column({ type: DataType.SMALLINT, defaultValue: 0 })
   declare salary_verified: number;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    defaultValue: 'user',
+  })
+  role: string;
 }

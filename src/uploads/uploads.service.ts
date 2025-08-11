@@ -7,7 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from '..//users/users.model';
 import { relative, join } from 'path';
 import { InjectModel } from '@nestjs/sequelize';
-import { raiseNotFound } from '@/config/error.config';
+import { raiseNotFound } from '../config/error.config';
 
 @Injectable()
 export class UploadsService {

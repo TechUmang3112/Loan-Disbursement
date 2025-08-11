@@ -10,8 +10,8 @@ import {
   Get,
 } from '@nestjs/common';
 import { LoanService } from './loan.service';
-import { LoanOfferDto } from '@/dto/loanOffer.dto';
-import { LoanResponseDto } from '@/dto/loanResponse.dto';
+import { LoanOfferDto } from '../dto/loanOffer.dto';
+import { LoanResponseDto } from '../dto/loanResponse.dto';
 
 @Controller('loan')
 export class LoanController {

@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 import { Reflector } from '@nestjs/core';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard } from './middleware/jwt/auth.guard';
+import { JwtAuthGuard } from './common/guards/auth.guard';
 
 env.config({ quiet: true });
 

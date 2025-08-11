@@ -3,14 +3,14 @@ import {
   raiseBadReq,
   raiseForbidden,
   raiseNotFound,
-} from '@/config/error.config';
+} from '../config/error.config';
 import { Loan } from './loan.model';
-import { Kyc } from '@/kyc/kyc.model';
+import { Kyc } from '../kyc/kyc.model';
 import { Injectable } from '@nestjs/common';
 import { User } from '../users/users.model';
 import { InjectModel } from '@nestjs/sequelize';
-import { LoanOfferDto } from '@/dto/loanOffer.dto';
-import { UserStatus } from '@/common/enums/userStatus.enum';
+import { LoanOfferDto } from '../dto/loanOffer.dto';
+import { UserStatus } from '../common/enums/userStatus.enum';
 import { LoanStatus } from '../common/enums/loanStatus.enum';
 
 @Injectable()
@@ -62,6 +62,7 @@ export class LoanService {
     );
 
     return {
+      success: true,
       message: 'Loan offered successfully',
       loan_offer: loan,
     };
@@ -132,6 +133,7 @@ export class LoanService {
     await loan.save();
 
     return {
+      success: true,
       message: `Loan ${response}d successfully`,
       updatedLoan: loan,
     };
@@ -157,6 +159,7 @@ export class LoanService {
     });
 
     return {
+      success: true,
       count: loans.length,
       status: normalizedStatus,
       loans,

@@ -29,8 +29,17 @@ export function raiseUnauthorized(err_msg: string) {
   );
 }
 
-export function raiseOk(err_msg: string) {
-  throw new HttpException({ success: true, message: err_msg }, HttpStatus.OK);
+export function sendOk(msg: string, status: HttpStatus = HttpStatus.OK) {
+  const responseObj: any = {};
+  const prepareResponse: any = {};
+  if (responseObj?.message) prepareResponse.message = responseObj.message;
+  if (responseObj.statusCode)
+    prepareResponse.statusCode = responseObj.statusCode;
+  delete responseObj?.message;
+  delete responseObj?.statusCode;
+  if (Object.keys(responseObj).length > 0) prepareResponse.data = responseObj;
+  prepareResponse.success = true;
+  return { success: true, message: msg, statusCode: status };
 }
 
 export function raiseForbidden(err_msg: string) {

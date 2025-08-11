@@ -27,4 +27,5 @@ export interface UserAttributes {
   emi_due_day: number;
   user_status: number;
   salary_verified: number;
+  role: string;
 }

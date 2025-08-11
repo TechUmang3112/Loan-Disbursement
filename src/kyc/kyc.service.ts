@@ -1,13 +1,13 @@
 // Imports
 import { Kyc } from './kyc.model';
-import { KycDto } from '@/dto/kyc.dto';
-import { User } from '@/users/users.model';
+import { KycDto } from '../dto/kyc.dto';
+import { User } from '../users/users.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { KycStatus } from '@/common/enums/kycStatus.enum';
-import { UserStatus } from '@/common/enums/userStatus.enum';
-import { raiseNotFound, raiseOk } from '@/config/error.config';
-import { VerificationStatus } from '@/common/enums/verificationsStatus.enum';
+import { KycStatus } from '../common/enums/kycStatus.enum';
+import { UserStatus } from '../common/enums/userStatus.enum';
+import { raiseNotFound, sendOk } from '../config/error.config';
+import { VerificationStatus } from '../common/enums/verificationsStatus.enum';
 
 @Injectable()
 export class KycService {
@@ -43,12 +43,16 @@ export class KycService {
       status: 0,
     });
 
-    return { message: 'KYC details submitted successfully', kyc: kycEntry };
+    return {
+      success: true,
+      message: 'KYC details submitted successfully',
+      kyc: kycEntry,
+    };
   }
 
   async getById(kycId: number) {
     const kyc = await this.kycModel.findByPk(kycId);
-    if (!kyc) throw new raiseNotFound('KYC not found');
+    if (!kyc) throw raiseNotFound('KYC not found');
     return kyc;
   }
 
@@ -58,7 +62,7 @@ export class KycService {
 
   async verifyKyc(userId: number) {
     const user = await this.userModel.findByPk(userId);
-    if (!user) throw new raiseNotFound('User not found');
+    if (!user) throw raiseNotFound('User not found');
 
     await this.userModel.update(
       {
@@ -72,7 +76,7 @@ export class KycService {
 
     await this.kycModel.update({ status: 1 }, { where: { userId } });
 
-    return raiseOk('KYC verified successfully');
+    return sendOk('KYC verified successfully');
   }
 
   async rejectKyc(userId: number) {
@@ -84,6 +88,6 @@ export class KycService {
       { where: { id: userId } },
     );
 
-    return raiseOk('KYC status updated to rejected');
+    return sendOk('KYC status updated to rejected');
   }
 }

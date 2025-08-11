@@ -11,7 +11,7 @@ import {
   Default,
 } from 'sequelize-typescript';
 import { User } from '../users/users.model';
-import { LoanStatus } from '@/common/enums/loanStatus.enum';
+import { LoanStatus } from '../common/enums/loanStatus.enum';
 
 @Table({ tableName: 'loans' })
 export class Loan extends Model {

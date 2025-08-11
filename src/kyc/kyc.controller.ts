@@ -8,7 +8,7 @@ import {
   Body,
   Patch,
 } from '@nestjs/common';
-import { KycDto } from '@/dto/kyc.dto';
+import { KycDto } from '../dto/kyc.dto';
 import { KycService } from './kyc.service';
 
 @Controller('kyc')

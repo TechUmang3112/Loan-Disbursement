@@ -2,9 +2,10 @@
 import {
   raiseBadReq,
   raiseNotFound,
+  sendOk,
   raiseTooManyReq,
   raiseUnauthorized,
-} from '@/config/error.config';
+} from '../config/error.config';
 import * as bcrypt from 'bcrypt';
 import { OtpDto } from '../otp/otp.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -13,10 +14,10 @@ import { LoginDto } from '../dto/login.dto';
 import { SignUpDto } from '../dto/auth.dto';
 import { OtpService } from '../otp/otp.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { crypt } from '@/common/utils/crypt.service';
+import { crypt } from '../common/utils/crypt.service';
 import { UsersService } from '../users/users.service';
 import { getISTDate } from '../common/utils/time.util';
-import { UserStatus } from '@/common/enums/userStatus.enum';
+import { UserStatus } from '../common/enums/userStatus.enum';
 
 const OTP_EXPIRY_MINUTES = 5;
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
@@ -64,10 +65,7 @@ export default class AuthService {
       max_retry,
     });
 
-    return {
-      success: true,
-      message: 'OTP sent successfully to your email',
-    };
+    return sendOk('OTP sent successfully to your email');
   }
 
   async verifyOtp(otpDto: OtpDto) {
@@ -76,12 +74,12 @@ export default class AuthService {
     this.logger.log(`Verify OTP for ${email}`);
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new raiseNotFound('User not found');
+      throw raiseNotFound('User not found');
     }
 
     const otpIssuedAt = user?.otp_timer ? new Date(user.otp_timer) : null;
     if (!otpIssuedAt || isNaN(otpIssuedAt.getTime())) {
-      throw new raiseBadReq('OTP generation time is missing or invalid.');
+      throw raiseBadReq('OTP generation time is missing or invalid.');
     }
 
     const expiresAt = new Date(
@@ -89,11 +87,11 @@ export default class AuthService {
     );
 
     if (Date.now() >= expiresAt.getTime()) {
-      throw new raiseBadReq('OTP has expired. Please request a new one.');
+      throw raiseBadReq('OTP has expired. Please request a new one.');
     }
 
     if (user.max_retry >= OTP_MAX_RETRY) {
-      throw new raiseTooManyReq(
+      throw raiseTooManyReq(
         'Maximum retry limit reached. Please request OTP again after 5 minutes.',
       );
     }
@@ -103,7 +101,7 @@ export default class AuthService {
         max_retry: user.max_retry + 1,
       });
 
-      throw new raiseUnauthorized('Invalid OTP. Please try again.');
+      throw raiseUnauthorized('Invalid OTP. Please try again.');
     }
 
     let updateFields: any = {
@@ -124,19 +122,18 @@ export default class AuthService {
       }
 
       await this.usersService.updateUser(email, updateFields);
-      return { message: 'Email verified successfully' };
+      return sendOk('Email verified successfully');
     }
 
     if (user.is_email_verified === 1 && user.is_mobile_verified === 0) {
       updateFields.is_mobile_verified = 1;
       await this.usersService.updateUser(email, updateFields);
-      return { message: 'Mobile verified successfully' };
+      return sendOk('Mobile verified successfully');
     }
 
-    return {
-      message:
-        'Now you can enter your basic details then you can proceed to complete your KYC',
-    };
+    return sendOk(
+      'Now you can enter your basic details then you can proceed to complete your KYC',
+    );
   }
 
   async resendOtp(email: string) {
@@ -144,7 +141,7 @@ export default class AuthService {
 
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new raiseNotFound('User not found');
+      throw raiseNotFound('User not found');
     }
 
     const isKycAvailable =
@@ -153,7 +150,7 @@ export default class AuthService {
     if (user.is_email_verified === 0) {
     } else if (user.is_mobile_verified === 0) {
     } else {
-      throw new raiseBadReq('All verifications are already completed.');
+      throw raiseBadReq('All verifications are already completed.');
     }
 
     if (user.otp_timer) {
@@ -169,6 +166,7 @@ export default class AuthService {
         return {
           message: 'Please wait before requesting a new OTP.',
           time_left: `${secondsLeft} seconds`,
+          is_valid_user: true,
         };
       }
     }
@@ -181,31 +179,39 @@ export default class AuthService {
       max_retry: 0,
     });
 
-    return { message: 'OTP resent successfully' };
+    return sendOk('OTP resent successfully');
   }
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
     if (!email || !password) {
-      throw new raiseBadReq('Email and password are required.');
+      throw raiseBadReq('Email and password are required.');
     }
 
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new raiseNotFound('User not found. Please sign up first.');
+      throw raiseNotFound('User not found. Please sign up first.');
+    }
+
+    if (!password) {
+      throw raiseUnauthorized('Password is required.');
+    }
+
+    if (!user?.password) {
+      throw raiseUnauthorized('Invalid email or password!!!');
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password);
     if (!passwordMatches) {
-      throw new raiseUnauthorized('Invalid email or password.');
+      throw raiseUnauthorized('Invalid email or password.');
     }
 
     if (user.is_email_verified == 0) {
-      throw new raiseUnauthorized('Please verify your email to log in.');
+      throw raiseUnauthorized('Please verify your email to log in.');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { id: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload);
 
     return {
@@ -216,6 +222,7 @@ export default class AuthService {
         id: user.id,
         email: user.email,
         user_name: user.user_name,
+        role: user.role,
       },
     };
   }
@@ -223,7 +230,7 @@ export default class AuthService {
   async basicDetails(body: BasicDto, email: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new raiseNotFound('User not found');
+      throw raiseNotFound('User not found');
     }
 
     await this.usersService.updateUser(email, {
@@ -238,6 +245,6 @@ export default class AuthService {
       gender: body.gender,
     });
 
-    return { message: 'Basic details updated successfully' };
+    return sendOk('Basic details updated successfully');
   }
 }
