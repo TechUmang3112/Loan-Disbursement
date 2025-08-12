@@ -6,45 +6,49 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-  PrimaryKey,
-  AutoIncrement,
   Default,
 } from 'sequelize-typescript';
 import { User } from '../users/users.model';
 import { LoanStatus } from '../common/enums/loanStatus.enum';
 
-@Table({ tableName: 'loans' })
+@Table({ tableName: 'loan', timestamps: true })
 export class Loan extends Model {
-  @PrimaryKey
-  @AutoIncrement
-  @Column
-  loan_id: number;
+  @Column({
+    type: DataType.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    field: 'loan_id',
+  })
+  declare loanId: number;
 
   @ForeignKey(() => User)
-  @Column({ type: DataType.INTEGER })
-  user_id: number;
+  @Column({ type: DataType.INTEGER, allowNull: false, field: 'user_id' })
+  declare userId: number;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 
   @Column({ type: DataType.FLOAT })
-  amount: number;
+  declare amount: number;
 
   @Column({ type: DataType.FLOAT })
-  monthly_emi: number;
+  declare monthly_emi: number;
 
   @Column({ type: DataType.INTEGER })
-  tenure_months: number;
+  declare tenure_months: number;
 
   @Column({
     type: DataType.SMALLINT,
     allowNull: false,
     defaultValue: LoanStatus.OFFERED,
   })
-  status: LoanStatus;
+  declare status: LoanStatus;
 
   @Column({ type: DataType.DATE, allowNull: true })
-  disbursed_on: Date;
+  declare disbursed_on: Date;
+
+  @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
+  declare disbursed_amount: number;
 
   @Default(3.0)
   @Column({ type: DataType.FLOAT, allowNull: false })

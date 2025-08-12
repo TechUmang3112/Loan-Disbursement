@@ -16,7 +16,6 @@ import { Response } from 'express';
 import { createReadStream } from 'fs';
 import { UploadsService } from './uploads.service';
 import { makeMulterOptions } from './multer.config';
-import { raiseUnauthorized } from '../config/error.config';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('kyc/:kycId/uploads')
@@ -30,15 +29,7 @@ export class UploadsController {
     @UploadedFiles() files: Express.Multer.File[],
     @Req() req: any,
   ) {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      throw raiseUnauthorized(
-        'User ID not found in token. Make sure JWT is passed.',
-      );
-    }
-
-    return this.uploadsService.saveFiles(kycId, userId, files);
+    return this.uploadsService.saveFiles(kycId, req.user?.id, files);
   }
 
   @Get()
@@ -46,22 +37,22 @@ export class UploadsController {
     return this.uploadsService.list(kycId);
   }
 
-  @Get(':uploadId')
-  async download(
-    @Param('kycId', ParseIntPipe) kycId: number,
-    @Param('uploadId', ParseIntPipe) uploadId: number,
-    @Res() res: Response,
-  ) {
-    const file = await this.uploadsService.getOne(kycId, uploadId);
-    const absPath = join(process.cwd(), file.path);
+  // @Get(':uploadId')
+  // async download(
+  //   @Param('kycId', ParseIntPipe) kycId: number,
+  //   @Param('uploadId', ParseIntPipe) uploadId: number,
+  //   @Res() res: Response,
+  // ) {
+  //   const file = await this.uploadsService.getOne(kycId, uploadId);
+  //   const absPath = join(process.cwd(), file.path);
 
-    res.setHeader('Content-Type', file.mimeType);
-    res.setHeader(
-      'Content-Disposition',
-      `inline; filename="${file.originalName}"`,
-    );
-    createReadStream(absPath).pipe(res);
-  }
+  //   res.setHeader('Content-Type', file.mimeType);
+  //   res.setHeader(
+  //     'Content-Disposition',
+  //     `inline; filename="${file.originalName}"`,
+  //   );
+  //   createReadStream(absPath).pipe(res);
+  // }
 
   // @Delete(':uploadId')
   // async delete(

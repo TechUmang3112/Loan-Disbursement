@@ -199,7 +199,7 @@ export default class AuthService {
     }
 
     if (!user?.password) {
-      throw raiseUnauthorized('Invalid email or password!!!');
+      throw raiseUnauthorized('Invalid email or password.');
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password);

@@ -1,7 +1,14 @@
 // Imports
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../common/guards/auth.guard';
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 
 interface AuthenticatedUser {
   id: number;
@@ -9,7 +16,7 @@ interface AuthenticatedUser {
   user_name?: string;
 }
 
-@Controller('auth')
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -20,9 +27,8 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('user-status')
-  async getOwnStatus(@Req() req: { user: AuthenticatedUser }) {
-    const userId = req.user.id;
+  @Get('userstatus/:id')
+  async getUserStatus(@Param('id', ParseIntPipe) userId: number) {
     return this.usersService.getUserStatus(userId);
   }
 }

@@ -8,10 +8,6 @@ import { raiseBadReq, raiseNotFound } from '../config/error.config';
 
 @Injectable()
 export class UsersService {
-  // otp(arg0: { otp: string }) {
-  //   throw raiseBadReq('Method not implemented.');
-  // }
-
   constructor(
     @InjectModel(User)
     private readonly userModel: typeof User,

@@ -22,10 +22,10 @@ export class LoanService {
   ) {}
 
   async offerLoan(userId: number, dto: LoanOfferDto) {
-    const user = await this.userModel.findByPk(dto.user_id);
+    const user = await this.userModel.findByPk(userId);
     if (!user) throw raiseNotFound('User not found');
 
-    const kyc = await this.kycModel.findOne({ where: { userId: dto.user_id } });
+    const kyc = await this.kycModel.findOne({ where: { userId } });
     if (!kyc || kyc.status !== 1) {
       throw raiseBadReq('User KYC is not verified');
     }
@@ -44,7 +44,7 @@ export class LoanService {
       Math.round((totalPayable / dto.tenure_months) * 100) / 100;
 
     const loan = await this.loanModel.create({
-      user_id: dto.user_id,
+      user_id: userId,
       amount: dto.amount,
       tenure_months: dto.tenure_months,
       interest_rate: interestRate,
@@ -53,14 +53,9 @@ export class LoanService {
     });
 
     await this.userModel.update(
-      {
-        user_status: UserStatus.LOAN_APPROVED,
-      },
-      {
-        where: { id: userId },
-      },
+      { user_status: UserStatus.LOAN_APPROVED },
+      { where: { id: userId } },
     );
-
     return {
       success: true,
       message: 'Loan offered successfully',
@@ -69,16 +64,15 @@ export class LoanService {
   }
 
   async respondToLoanOffer(
-    userId: number,
     loanId: number,
     response: 'approve' | 'reject',
+    userId: number,
   ) {
     const loan = await this.loanModel.findByPk(loanId);
     if (!loan) {
       throw raiseNotFound('Loan not found');
     }
-
-    if (loan.user_id !== userId) {
+    if (loan.userId !== userId) {
       throw raiseForbidden('You are not authorized to respond to this loan');
     }
 
@@ -101,6 +95,11 @@ export class LoanService {
         {
           where: { id: userId },
         },
+      );
+
+      await this.loanModel.update(
+        { disbursed_amount: loan.amount },
+        { where: { loanId: loan.loanId } },
       );
 
       loan.disbursed_on = new Date();

@@ -31,7 +31,7 @@ export default class AuthController {
   }
 
   @Public()
-  @Post('resendOtp')
+  @Post('resendotp')
   async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
     return await this.service.resendOtp(resendOtpDto.email);
   }

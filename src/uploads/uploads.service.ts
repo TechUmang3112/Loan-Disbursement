@@ -7,7 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from '..//users/users.model';
 import { relative, join } from 'path';
 import { InjectModel } from '@nestjs/sequelize';
-import { raiseNotFound } from '../config/error.config';
+import { raiseNotFound, raiseUnauthorized } from '../config/error.config';
 
 @Injectable()
 export class UploadsService {
@@ -22,6 +22,12 @@ export class UploadsService {
   }
 
   async saveFiles(kycId: number, userId: number, files: Express.Multer.File[]) {
+    if (!userId) {
+      throw raiseUnauthorized(
+        'User ID not found in token. Make sure JWT is passed.',
+      );
+    }
+
     const kyc = await this.kycModel.findByPk(kycId);
     if (!kyc) return raiseNotFound('KYC not found');
 
@@ -67,13 +73,13 @@ export class UploadsService {
     });
   }
 
-  async getOne(kycId: number, uploadId: number) {
-    const record = await this.uploadModel.findOne({
-      where: { kycId, id: uploadId },
-    });
-    if (!record) throw new raiseNotFound('File not found');
-    return record;
-  }
+  // async getOne(kycId: number, uploadId: number) {
+  //   const record = await this.uploadModel.findOne({
+  //     where: { kycId, id: uploadId },
+  //   });
+  //   if (!record) throw new raiseNotFound('File not found');
+  //   return record;
+  // }
 
   // async remove(kycId: number, uploadId: number) {
   //   const record = await this.getOne(kycId, uploadId);

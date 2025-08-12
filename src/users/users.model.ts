@@ -114,5 +114,5 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     allowNull: false,
     defaultValue: 'user',
   })
-  role: string;
+  declare role: string;
 }
