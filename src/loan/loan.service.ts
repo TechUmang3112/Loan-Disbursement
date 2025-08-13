@@ -85,51 +85,54 @@ export class LoanService {
     }
 
     if (response === 'approve') {
-      loan.status = LoanStatus.APPROVED;
-
-      await this.userModel.update(
-        {
-          disbursed_amount: loan.amount,
-          user_status: UserStatus.DISBURSEMENT,
-        },
-        {
-          where: { id: userId },
-        },
-      );
-
-      await this.loanModel.update(
-        { disbursed_amount: loan.amount },
-        { where: { loanId: loan.loanId } },
-      );
-
-      loan.disbursed_on = new Date();
-
       const user = await this.userModel.findByPk(userId);
-      if (!user?.emi_due_day) {
+      if (!user?.emi_due_day)
         throw raiseBadReq('EMI due day is not set for this user');
-      }
-
-      const emiDay = user.emi_due_day;
-      if (emiDay < 1 || emiDay > 28) {
+      if (user.emi_due_day < 1 || user.emi_due_day > 28) {
         throw raiseBadReq('Invalid EMI due day. It must be between 1 and 28.');
       }
 
       const today = new Date();
       const nextEmiDate = new Date(today);
-      nextEmiDate.setDate(emiDay);
-
+      nextEmiDate.setDate(user.emi_due_day);
       if (nextEmiDate <= today) {
         nextEmiDate.setMonth(nextEmiDate.getMonth() + 1);
       }
 
-      loan.next_emi_date = nextEmiDate;
+      await Promise.all([
+        this.userModel.update(
+          {
+            disbursed_amount: loan.amount,
+            user_status: UserStatus.DISBURSEMENT,
+          },
+          { where: { id: userId } },
+        ),
+        this.loanModel.update(
+          {
+            status: LoanStatus.APPROVED,
+            disbursed_amount: loan.amount,
+            disbursed_on: new Date(),
+            next_emi_date: nextEmiDate,
+          },
+          { where: { loanId: loan.loanId } },
+        ),
+      ]);
+
+      loan.set({
+        status: LoanStatus.APPROVED,
+        disbursed_amount: loan.amount,
+        disbursed_on: new Date(),
+        next_emi_date: nextEmiDate,
+      });
     } else if (response === 'reject') {
+      await this.loanModel.update(
+        { status: LoanStatus.REJECTED },
+        { where: { loanId: loan.loanId } },
+      );
       loan.status = LoanStatus.REJECTED;
     } else {
       throw raiseBadReq('Invalid response. Use "approve" or "reject".');
     }
-
-    await loan.save();
 
     return {
       success: true,
@@ -137,6 +140,4 @@ export class LoanService {
       updatedLoan: loan,
     };
   }
-
- 
 }
