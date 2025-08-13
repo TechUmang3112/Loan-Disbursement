@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Get,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -27,5 +28,11 @@ export class AdminController {
   @Roles('admin')
   async getUserStatus(@Param('userId', ParseIntPipe) userId: number) {
     return this.adminService.getUserStatus(userId);
+  }
+
+  @Get('/list')
+  @Roles('admin')
+  async listLoansByStatus(@Query('status') status: string) {
+    return this.adminService.listLoansByStatus(status);
   }
 }

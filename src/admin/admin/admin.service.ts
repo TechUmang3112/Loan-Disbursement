@@ -1,15 +1,20 @@
 // Imports
+import { Loan } from '../../loan/loan.model';
 import { User } from 'users/users.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { UserStatus } from 'common/enums/userStatus.enum';
-import { raiseNotFound, sendOk } from 'config/error.config';
+import { raiseBadReq, raiseNotFound, sendOk } from 'config/error.config';
+import { LoanStatus } from '../../common/enums/loanStatus.enum';
 
 @Injectable()
 export class AdminService {
   constructor(
     @InjectModel(User)
     private readonly userModel: typeof User,
+
+    @InjectModel(Loan)
+    private readonly loanModel: typeof Loan,
   ) {}
 
   async verifySalary(userId: number) {
@@ -44,6 +49,33 @@ export class AdminService {
       email: user.email,
       status_code: user.user_status,
       status_label: UserStatus[user.user_status],
+    };
+  }
+
+  async listLoansByStatus(status: string) {
+    const statusMap = {
+      offered: LoanStatus.OFFERED,
+      approved: LoanStatus.APPROVED,
+      rejected: LoanStatus.REJECTED,
+    };
+
+    const normalizedStatus = status?.toLowerCase();
+
+    if (!statusMap.hasOwnProperty(normalizedStatus)) {
+      throw raiseBadReq(
+        'Invalid status. Valid values are: offered, approved, rejected.',
+      );
+    }
+
+    const loans = await this.loanModel.findAll({
+      where: { status: statusMap[normalizedStatus] },
+    });
+
+    return {
+      success: true,
+      count: loans.length,
+      status: normalizedStatus,
+      loans,
     };
   }
 }

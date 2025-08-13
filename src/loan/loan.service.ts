@@ -138,30 +138,5 @@ export class LoanService {
     };
   }
 
-  async listLoansByStatus(status: string) {
-    const statusMap = {
-      offered: LoanStatus.OFFERED,
-      approved: LoanStatus.APPROVED,
-      rejected: LoanStatus.REJECTED,
-    };
-
-    const normalizedStatus = status?.toLowerCase();
-
-    if (!statusMap.hasOwnProperty(normalizedStatus)) {
-      throw raiseBadReq(
-        'Invalid status. Valid values are: offered, approved, rejected.',
-      );
-    }
-
-    const loans = await this.loanModel.findAll({
-      where: { status: statusMap[normalizedStatus] },
-    });
-
-    return {
-      success: true,
-      count: loans.length,
-      status: normalizedStatus,
-      loans,
-    };
-  }
+ 
 }

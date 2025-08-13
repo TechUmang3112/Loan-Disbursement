@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { LoanService } from './loan.service';
 import { LoanOfferDto } from '../dto/loanOffer.dto';
-import { JwtAuthGuard } from '@/common/guards/auth.guard';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
 
 @Controller('loan')
 export class LoanController {
@@ -43,10 +43,5 @@ export class LoanController {
     @Req() req: any,
   ) {
     return this.loanService.respondToLoanOffer(loanId, 'reject', req.user.id);
-  }
-
-  @Get('/list')
-  async listLoansByStatus(@Query('status') status: string) {
-    return this.loanService.listLoansByStatus(status);
   }
 }
