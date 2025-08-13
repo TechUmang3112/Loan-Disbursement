@@ -28,4 +28,5 @@ export interface UserAttributes {
   user_status: number;
   salary_verified: number;
   role: string;
+  salary_credit_day: number;
 }

@@ -6,7 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { KycStatus } from '../common/enums/kycStatus.enum';
 import { UserStatus } from '../common/enums/userStatus.enum';
-import { raiseNotFound, sendOk } from '../config/error.config';
+import { raiseBadReq, raiseNotFound, sendOk } from '../config/error.config';
 import { VerificationStatus } from '../common/enums/verificationsStatus.enum';
 
 @Injectable()
@@ -19,6 +19,16 @@ export class KycService {
   async createKyc(body: KycDto) {
     const user = await this.userModel.findOne({ where: { email: body.email } });
     if (!user) throw raiseNotFound('User not found');
+
+    const salaryCreditDay = body.salary_credit_day;
+    let emiDueDay = salaryCreditDay + 1;
+    if (emiDueDay > 31) {
+      emiDueDay = 1;
+    }
+
+    if (emiDueDay < 1 || emiDueDay > 31) {
+      throw raiseBadReq('Invalid EMI due day. It must be between 1 and 28.');
+    }
 
     await this.userModel.update(
       {
@@ -34,6 +44,8 @@ export class KycService {
         kyc_status: 0,
         tenure_months: body.tenure_months,
         user_status: UserStatus.KYC,
+        salary_credit_day: salaryCreditDay,
+        emi_due_day: emiDueDay,
       },
       { where: { id: user.id } },
     );

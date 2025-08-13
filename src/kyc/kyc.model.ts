@@ -51,4 +51,10 @@ export class Kyc extends Model<KycAttributes, KycCreationAttributes> {
 
   @HasMany(() => Upload)
   declare uploads: Upload[];
+
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare salary_credit_day: number;
+
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare emi_due_day: number;
 }
