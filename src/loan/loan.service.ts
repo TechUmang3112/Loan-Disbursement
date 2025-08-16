@@ -44,7 +44,7 @@ export class LoanService {
       Math.round((totalPayable / dto.tenure_months) * 100) / 100;
 
     const loan = await this.loanModel.create({
-      user_id: userId,
+      userId,
       amount: dto.amount,
       tenure_months: dto.tenure_months,
       interest_rate: interestRate,

@@ -1,11 +1,11 @@
 // Imports
-import { Loan } from '../../loan/loan.model';
 import { User } from 'users/users.model';
 import { Injectable } from '@nestjs/common';
+import { Loan } from '../../loan/loan.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { UserStatus } from 'common/enums/userStatus.enum';
-import { raiseBadReq, raiseNotFound, sendOk } from 'config/error.config';
 import { LoanStatus } from '../../common/enums/loanStatus.enum';
+import { raiseBadReq, raiseNotFound, sendOk } from 'config/error.config';
 
 @Injectable()
 export class AdminService {

@@ -9,7 +9,6 @@ import {
 
 export class SignUpDto {
   @IsNotEmpty()
-  @IsString()
   @IsEmail()
   @MaxLength(256)
   email: string;

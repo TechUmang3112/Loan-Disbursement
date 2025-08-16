@@ -3,8 +3,9 @@ import { Op } from 'sequelize';
 import { User } from './users.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { raiseNotFound } from '../config/error.config';
+import { UserAttributes } from '../users/users.attributes';
 import { UserStatus } from '../common/enums/userStatus.enum';
-import { raiseBadReq, raiseNotFound } from '../config/error.config';
 
 @Injectable()
 export class UsersService {
@@ -18,7 +19,7 @@ export class UsersService {
       attributes: ['email', 'mobile_number', 'user_name'],
       raw: true,
       where: {
-        [Op.or]: [{ email }, { mobile_number }, { user_name }],
+        [Op.or]: [{ email }, { mobile_number }],
       },
     });
   }
@@ -49,6 +50,8 @@ export class UsersService {
         'user_name',
         'role',
         'is_email_verified',
+        'otp_timer',
+        'otp',
       ],
     });
   }

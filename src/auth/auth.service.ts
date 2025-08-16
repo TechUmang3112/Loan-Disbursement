@@ -14,9 +14,9 @@ import { LoginDto } from '../dto/login.dto';
 import { SignUpDto } from '../dto/auth.dto';
 import { OtpService } from '../otp/otp.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { crypt } from '../common/utils/crypt.service';
 import { UsersService } from '../users/users.service';
 import { getISTDate } from '../common/utils/time.util';
+import { crypt } from '../common/utils/crypto.service';
 import { UserStatus } from '../common/enums/userStatus.enum';
 
 const OTP_EXPIRY_MINUTES = 5;
@@ -35,8 +35,6 @@ export default class AuthService {
 
   async signUp(signUpDto: SignUpDto) {
     const { email, user_name, password, mobile_number } = signUpDto;
-
-    this.logger.log(`Signup attempt for ${email}`);
 
     const is_exist = await this.usersService.isExist(
       email,
@@ -70,8 +68,6 @@ export default class AuthService {
 
   async verifyOtp(otpDto: OtpDto) {
     const { email, otp } = otpDto;
-
-    this.logger.log(`Verify OTP for ${email}`);
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw raiseNotFound('User not found');
@@ -81,7 +77,6 @@ export default class AuthService {
     if (!otpIssuedAt || isNaN(otpIssuedAt.getTime())) {
       throw raiseBadReq('OTP generation time is missing or invalid.');
     }
-
     const expiresAt = new Date(
       otpIssuedAt.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000,
     );
@@ -112,14 +107,7 @@ export default class AuthService {
 
     if (user.is_email_verified === 0) {
       updateFields.is_email_verified = 1;
-
-      try {
-        updateFields.user_status = UserStatus.BASIC_DETAILS;
-      } catch (e) {
-        this.logger.debug(
-          'UserStatus enum assignment skipped or failed; ensure enum exists if you want user_status to update.',
-        );
-      }
+      updateFields.user_status = UserStatus.BASIC_DETAILS;
 
       await this.usersService.updateUser(email, updateFields);
       return sendOk('Email verified successfully');
@@ -137,22 +125,10 @@ export default class AuthService {
   }
 
   async resendOtp(email: string) {
-    this.logger.log(`Resend OTP requested for ${email}`);
-
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw raiseNotFound('User not found');
     }
-
-    const isKycAvailable =
-      user.aadhar_number && user.pan_number && user.full_name && user.salary;
-
-    if (user.is_email_verified === 0) {
-    } else if (user.is_mobile_verified === 0) {
-    } else {
-      throw raiseBadReq('All verifications are already completed.');
-    }
-
     if (user.otp_timer) {
       const nowIST = getISTDate(new Date());
       const lastOtpIST = getISTDate(new Date(user.otp_timer));
