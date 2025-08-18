@@ -16,8 +16,8 @@ import { OtpService } from '../otp/otp.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { getISTDate } from '../common/utils/time.util';
-import { crypt } from '../common/utils/crypto.service';
 import { UserStatus } from '../common/enums/userStatus.enum';
+import { CryptoService } from '../common/utils/crypto.service';
 
 const OTP_EXPIRY_MINUTES = 5;
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
@@ -31,33 +31,39 @@ export default class AuthService {
     private usersService: UsersService,
     private otpService: OtpService,
     private jwtService: JwtService,
+    private cryptoService: CryptoService,
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
     const { email, user_name, password, mobile_number } = signUpDto;
 
     const is_exist = await this.usersService.isExist(
-      email,
-      mobile_number,
+      this.cryptoService.hashField(email),
+      this.cryptoService.hashField(mobile_number),
       user_name,
     );
 
-    if (email === is_exist?.email) {
+    if (is_exist?.email_hash === this.cryptoService.hashField(email)) {
       raiseBadReq('Email already exists');
-    } else if (mobile_number === is_exist?.mobile_number) {
+    } else if (
+      is_exist?.mobile_hash === this.cryptoService.hashField(mobile_number)
+    ) {
       raiseBadReq('Mobile number already exists');
     } else if (user_name === is_exist?.user_name) {
       raiseBadReq('Username already exists');
     }
 
-    const hashedPassword = await crypt(password);
     const { otp, otp_timer, max_retry } = this.otpService.generateOtpPayload();
 
     await this.usersService.createUser({
       email,
+      email_encrypted: this.cryptoService.encryptField(email),
+      email_hash: this.cryptoService.hashField(email),
       user_name,
-      password: hashedPassword,
+      password,
       mobile_number,
+      mobile_encrypted: this.cryptoService.encryptField(mobile_number),
+      mobile_hash: this.cryptoService.hashField(mobile_number),
       otp,
       otp_timer,
       max_retry,
@@ -68,7 +74,10 @@ export default class AuthService {
 
   async verifyOtp(otpDto: OtpDto) {
     const { email, otp } = otpDto;
-    const user = await this.usersService.findByEmail(email);
+
+    const user = await this.usersService.findByEmailHash(
+      this.cryptoService.hashField(email),
+    );
     if (!user) {
       throw raiseNotFound('User not found');
     }
@@ -80,7 +89,6 @@ export default class AuthService {
     const expiresAt = new Date(
       otpIssuedAt.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000,
     );
-
     if (Date.now() >= expiresAt.getTime()) {
       throw raiseBadReq('OTP has expired. Please request a new one.');
     }
@@ -92,14 +100,17 @@ export default class AuthService {
     }
 
     if (user.otp?.toString() !== otp.toString()) {
-      await this.usersService.updateUser(email, {
-        max_retry: user.max_retry + 1,
-      });
+      await this.usersService.updateUserByHash(
+        this.cryptoService.hashField(email),
+        {
+          max_retry: user.max_retry + 1,
+        },
+      );
 
       throw raiseUnauthorized('Invalid OTP. Please try again.');
     }
 
-    let updateFields: any = {
+    const updateFields: any = {
       otp: null,
       otp_timer: null,
       max_retry: 0,
@@ -109,13 +120,20 @@ export default class AuthService {
       updateFields.is_email_verified = 1;
       updateFields.user_status = UserStatus.BASIC_DETAILS;
 
-      await this.usersService.updateUser(email, updateFields);
+      await this.usersService.updateUserByHash(
+        this.cryptoService.hashField(email),
+        updateFields,
+      );
       return sendOk('Email verified successfully');
     }
 
     if (user.is_email_verified === 1 && user.is_mobile_verified === 0) {
       updateFields.is_mobile_verified = 1;
-      await this.usersService.updateUser(email, updateFields);
+
+      await this.usersService.updateUserByHash(
+        this.cryptoService.hashField(email),
+        updateFields,
+      );
       return sendOk('Mobile verified successfully');
     }
 
@@ -125,7 +143,9 @@ export default class AuthService {
   }
 
   async resendOtp(email: string) {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmailHash(
+      this.cryptoService.hashField(email),
+    );
     if (!user) {
       throw raiseNotFound('User not found');
     }
@@ -149,37 +169,37 @@ export default class AuthService {
 
     const newOtp = this.otpService.generateOtp();
 
-    await this.usersService.updateUser(email, {
-      otp: newOtp,
-      otp_timer: new Date(),
-      max_retry: 0,
-    });
+    await this.usersService.updateUserByHash(
+      this.cryptoService.hashField(email),
+      {
+        otp: newOtp,
+        otp_timer: new Date(),
+        max_retry: 0,
+      },
+    );
 
     return sendOk('OTP resent successfully');
   }
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
-
     if (!email || !password) {
       throw raiseBadReq('Email and password are required.');
     }
 
-    const user = await this.usersService.findByEmail(email);
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailHash = this.cryptoService.hashField(normalizedEmail);
+    const user = await this.usersService.findByEmailHash(emailHash);
     if (!user) {
       throw raiseNotFound('User not found. Please sign up first.');
-    }
-
-    if (!password) {
-      throw raiseUnauthorized('Password is required.');
     }
 
     if (!user?.password) {
       throw raiseUnauthorized('Invalid email or password.');
     }
 
-    const passwordMatches = await bcrypt.compare(password, user.password);
-    if (!passwordMatches) {
+    const passwordmatches = await bcrypt.compare(password, user.password);
+    if (!passwordmatches) {
       throw raiseUnauthorized('Invalid email or password.');
     }
 
@@ -187,7 +207,9 @@ export default class AuthService {
       throw raiseUnauthorized('Please verify your email to log in.');
     }
 
-    const payload = { id: user.id, email: user.email, role: user.role };
+    const plainEmail = this.cryptoService.decryptField(user.email_encrypted);
+
+    const payload = { id: user.id, email: plainEmail, role: user.role };
     const accessToken = this.jwtService.sign(payload);
 
     return {
@@ -196,7 +218,7 @@ export default class AuthService {
       access_token: accessToken,
       user: {
         id: user.id,
-        email: user.email,
+        email: plainEmail,
         user_name: user.user_name,
         role: user.role,
       },
@@ -204,22 +226,28 @@ export default class AuthService {
   }
 
   async basicDetails(body: BasicDto, email: string) {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmailHash(
+      this.cryptoService.hashField(email),
+    );
     if (!user) {
       throw raiseNotFound('User not found');
     }
 
-    await this.usersService.updateUser(email, {
-      address: body.address,
-      aadhar_number: body.aadhar_number,
-      pan_number: body.pan_number,
-      full_name: body.full_name,
-      loan_amount: body.loan_amount,
-      salary: body.salary,
-      company_name: body.company_name,
-      dob: body.dob,
-      gender: body.gender,
-    });
+    await this.usersService.updateUserByHash(
+      this.cryptoService.hashField(email),
+      {
+        address: body.address,
+        aadhar_encrypted: this.cryptoService.encryptField(body.aadhar_number),
+        aadhar_hash: this.cryptoService.hashField(body.aadhar_number),
+        pan_number: body.pan_number,
+        full_name: body.full_name,
+        loan_amount: body.loan_amount,
+        salary: body.salary,
+        company_name: body.company_name,
+        dob: body.dob,
+        gender: body.gender,
+      },
+    );
 
     return sendOk('Basic details updated successfully');
   }

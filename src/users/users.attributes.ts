@@ -29,4 +29,10 @@ export interface UserAttributes {
   salary_verified: number;
   role: string;
   salary_credit_day: number;
+  email_encrypted: string;
+  email_hash: string;
+  mobile_hash: string;
+  mobile_encrypted: string;
+  aadhar_hash: string;
+  aadhar_encrypted: string;
 }

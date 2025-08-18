@@ -115,4 +115,22 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     defaultValue: 'user',
   })
   declare role: string;
+
+  @Column({ type: DataType.STRING, allowNull: false, unique: true })
+  declare email_encrypted: string;
+
+  @Column({ type: DataType.STRING, allowNull: false, unique: true })
+  declare email_hash: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare aadhar_encrypted: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare aadhar_hash: string;
+
+  @Column({ type: DataType.STRING, allowNull: false, unique: true })
+  declare mobile_encrypted: string;
+
+  @Column({ type: DataType.STRING, allowNull: false, unique: true })
+  declare mobile_hash: string;
 }

@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { KycStatus } from '../common/enums/kycStatus.enum';
 import { UserStatus } from '../common/enums/userStatus.enum';
+import { CryptoService } from '../common/utils/crypto.service';
 import { raiseBadReq, raiseNotFound, sendOk } from '../config/error.config';
 import { VerificationStatus } from '../common/enums/verificationsStatus.enum';
 
@@ -14,10 +15,14 @@ export class KycService {
   constructor(
     @InjectModel(Kyc) private readonly kycModel: typeof Kyc,
     @InjectModel(User) private readonly userModel: typeof User,
+    private readonly cryptoService: CryptoService,
   ) {}
 
   async createKyc(body: KycDto) {
-    const user = await this.userModel.findOne({ where: { email: body.email } });
+    const emailHash = this.cryptoService.hashField(body.email);
+    const user = await this.userModel.findOne({
+      where: { email_hash: emailHash },
+    });
     if (!user) throw raiseNotFound('User not found');
 
     const salaryCreditDay = body.salary_credit_day;
@@ -33,7 +38,8 @@ export class KycService {
     await this.userModel.update(
       {
         address: body.address,
-        aadhar_number: body.aadhar_number,
+        aadhar_encrypted: this.cryptoService.encryptField(body.aadhar_number),
+        aadhar_hash: this.cryptoService.hashField(body.aadhar_number),
         pan_number: body.pan_number,
         full_name: body.full_name,
         loan_amount: body.loan_amount,

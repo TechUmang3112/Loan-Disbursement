@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UserStatus } from 'common/enums/userStatus.enum';
 import { LoanStatus } from '../../common/enums/loanStatus.enum';
 import { raiseBadReq, raiseNotFound, sendOk } from 'config/error.config';
+import { CryptoService } from '@/common/utils/crypto.service';
 
 @Injectable()
 export class AdminService {
@@ -15,6 +16,8 @@ export class AdminService {
 
     @InjectModel(Loan)
     private readonly loanModel: typeof Loan,
+
+    private readonly cryptoService: CryptoService,
   ) {}
 
   async verifySalary(userId: number) {
@@ -36,17 +39,21 @@ export class AdminService {
 
   async getUserStatus(userId: number) {
     const user = await this.userModel.findByPk(userId, {
-      attributes: ['id', 'user_name', 'email', 'user_status'],
+      attributes: ['id', 'user_name', 'email_encrypted', 'user_status'],
     });
 
     if (!user) {
       throw raiseNotFound('User not found');
     }
 
+    const plainEmail = user.email_encrypted
+      ? this.cryptoService.decryptField(user.email_encrypted)
+      : null;
+
     return {
       id: user.id,
       name: user.user_name,
-      email: user.email,
+      email: plainEmail,
       status_code: user.user_status,
       status_label: UserStatus[user.user_status],
     };

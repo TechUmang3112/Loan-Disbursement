@@ -10,6 +10,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from '../middleware/jwt/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CryptoModule } from '@/common/utils/crypto.module';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     OtpModule,
     PassportModule,
     SequelizeModule.forFeature([User]),
-
+    CryptoModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

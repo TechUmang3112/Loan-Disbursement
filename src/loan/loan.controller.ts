@@ -14,12 +14,14 @@ import {
 import { LoanService } from './loan.service';
 import { LoanOfferDto } from '../dto/loanOffer.dto';
 import { JwtAuthGuard } from '../common/guards/auth.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('loan')
 export class LoanController {
   constructor(private readonly loanService: LoanService) {}
 
   @Post('/admin/offerloan/:userId')
+  @Roles('admin')
   async offerLoan(
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: LoanOfferDto,
