@@ -1,8 +1,8 @@
 // Imports
 import {
+  sendOk,
   raiseBadReq,
   raiseNotFound,
-  sendOk,
   raiseTooManyReq,
   raiseUnauthorized,
 } from '../config/error.config';
@@ -35,7 +35,12 @@ export default class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
-    const { email, user_name, password, mobile_number } = signUpDto;
+    const { email, user_name, password, confirm_password, mobile_number } =
+      signUpDto;
+
+    if (password !== confirm_password) {
+      raiseBadReq('Passwords do not match');
+    }
 
     const is_exist = await this.usersService.isExist(
       this.cryptoService.hashField(email),
@@ -53,8 +58,6 @@ export default class AuthService {
       raiseBadReq('Username already exists');
     }
 
-    const { otp, otp_timer, max_retry } = this.otpService.generateOtpPayload();
-
     await this.usersService.createUser({
       email,
       email_encrypted: this.cryptoService.encryptField(email),
@@ -64,82 +67,11 @@ export default class AuthService {
       mobile_number,
       mobile_encrypted: this.cryptoService.encryptField(mobile_number),
       mobile_hash: this.cryptoService.hashField(mobile_number),
-      otp,
-      otp_timer,
-      max_retry,
+      max_retry: 0,
     });
 
-    return sendOk('OTP sent successfully to your email');
-  }
-
-  async verifyOtp(otpDto: OtpDto) {
-    const { email, otp } = otpDto;
-
-    const user = await this.usersService.findByEmailHash(
-      this.cryptoService.hashField(email),
-    );
-    if (!user) {
-      throw raiseNotFound('User not found');
-    }
-
-    const otpIssuedAt = user?.otp_timer ? new Date(user.otp_timer) : null;
-    if (!otpIssuedAt || isNaN(otpIssuedAt.getTime())) {
-      throw raiseBadReq('OTP generation time is missing or invalid.');
-    }
-    const expiresAt = new Date(
-      otpIssuedAt.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000,
-    );
-    if (Date.now() >= expiresAt.getTime()) {
-      throw raiseBadReq('OTP has expired. Please request a new one.');
-    }
-
-    if (user.max_retry >= OTP_MAX_RETRY) {
-      throw raiseTooManyReq(
-        'Maximum retry limit reached. Please request OTP again after 5 minutes.',
-      );
-    }
-
-    if (user.otp?.toString() !== otp.toString()) {
-      await this.usersService.updateUserByHash(
-        this.cryptoService.hashField(email),
-        {
-          max_retry: user.max_retry + 1,
-        },
-      );
-
-      throw raiseUnauthorized('Invalid OTP. Please try again.');
-    }
-
-    const updateFields: any = {
-      otp: null,
-      otp_timer: null,
-      max_retry: 0,
-    };
-
-    if (user.is_email_verified === 0) {
-      updateFields.is_email_verified = 1;
-      updateFields.user_status = UserStatus.BASIC_DETAILS;
-
-      await this.usersService.updateUserByHash(
-        this.cryptoService.hashField(email),
-        updateFields,
-      );
-      return sendOk('Email verified successfully');
-    }
-
-    if (user.is_email_verified === 1 && user.is_mobile_verified === 0) {
-      updateFields.is_mobile_verified = 1;
-
-      await this.usersService.updateUserByHash(
-        this.cryptoService.hashField(email),
-        updateFields,
-      );
-      return sendOk('Mobile verified successfully');
-    }
-
-    return sendOk(
-      'Now you can enter your basic details then you can proceed to complete your KYC',
-    );
+    const otpResponse = await this.resendOtp(email);
+    return otpResponse;
   }
 
   async resendOtp(email: string) {
@@ -178,7 +110,79 @@ export default class AuthService {
       },
     );
 
-    return sendOk('OTP resent successfully');
+    return sendOk(`OTP Sent Successfully To ${email}`);
+  }
+
+  async verifyOtp(otpDto: OtpDto) {
+    const { email, otp } = otpDto;
+
+    const user = await this.usersService.findByEmailHash(
+      this.cryptoService.hashField(email),
+    );
+    if (!user) {
+      throw raiseNotFound('User not found');
+    }
+
+    if (!otp) {
+      throw raiseBadReq('OTP is required.');
+    }
+    const otpIssuedAt = user?.otp_timer ? new Date(user.otp_timer) : null;
+    if (!otpIssuedAt || isNaN(otpIssuedAt.getTime())) {
+      throw raiseBadReq('OTP generation time is missing or invalid.');
+    }
+    const expiresAt = new Date(
+      otpIssuedAt.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000,
+    );
+    if (Date.now() >= expiresAt.getTime()) {
+      throw raiseBadReq('OTP has expired. Please request a new one.');
+    }
+
+    if (user.max_retry >= OTP_MAX_RETRY) {
+      throw raiseTooManyReq(
+        'Maximum retry limit reached. Please request OTP again after 5 minutes.',
+      );
+    }
+
+    if (user.otp?.toString() !== otp.toString()) {
+      await this.usersService.updateUserByHash(
+        this.cryptoService.hashField(email),
+        {
+          max_retry: user.max_retry + 1,
+        },
+      );
+      throw raiseUnauthorized('Invalid OTP. Please try again.');
+    }
+
+    const updateFields: any = {
+      otp: null,
+      otp_timer: null,
+      max_retry: 0,
+    };
+
+    if (user.is_email_verified === 0) {
+      updateFields.is_email_verified = 1;
+      updateFields.user_status = UserStatus.BASIC_DETAILS;
+
+      await this.usersService.updateUserByHash(
+        this.cryptoService.hashField(email),
+        updateFields,
+      );
+      return sendOk('Email verified successfully');
+    }
+
+    if (user.is_email_verified === 1 && user.is_mobile_verified === 0) {
+      updateFields.is_mobile_verified = 1;
+
+      await this.usersService.updateUserByHash(
+        this.cryptoService.hashField(email),
+        updateFields,
+      );
+      return sendOk('Mobile verified successfully');
+    }
+
+    return sendOk(
+      'Now you can enter your basic details then you can proceed to complete your KYC',
+    );
   }
 
   async login(loginDto: LoginDto) {

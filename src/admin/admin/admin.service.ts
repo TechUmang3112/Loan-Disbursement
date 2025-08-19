@@ -4,9 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { Loan } from '../../loan/loan.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { UserStatus } from 'common/enums/userStatus.enum';
+import { CryptoService } from '@/common/utils/crypto.service';
 import { LoanStatus } from '../../common/enums/loanStatus.enum';
 import { raiseBadReq, raiseNotFound, sendOk } from 'config/error.config';
-import { CryptoService } from '@/common/utils/crypto.service';
 
 @Injectable()
 export class AdminService {

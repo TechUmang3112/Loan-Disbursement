@@ -8,9 +8,9 @@ import AuthController from './auth.controller';
 import { PassportModule } from '@nestjs/passport';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from '../users/users.module';
+import { CryptoModule } from '@/common/utils/crypto.module';
 import { JwtStrategy } from '../middleware/jwt/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CryptoModule } from '@/common/utils/crypto.module';
 
 @Module({
   imports: [

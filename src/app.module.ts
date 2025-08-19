@@ -19,6 +19,7 @@ import { JwtAuthGuard } from './common/guards/auth.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductionGuard } from './middleware/production.guard';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { CryptoModule } from '@/common/utils/crypto.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
     EmiReminderModule,
     AdminModule,
     LoanModule,
+    CryptoModule,
   ],
   controllers: [AppController],
   providers: [

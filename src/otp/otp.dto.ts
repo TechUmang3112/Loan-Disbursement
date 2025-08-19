@@ -16,5 +16,5 @@ export class OtpDto {
   @IsString()
   @MinLength(4)
   @MaxLength(4)
-  otp: string;
+  otp?: string;
 }

@@ -34,8 +34,6 @@ export class UsersService {
     mobile_number: string;
     mobile_encrypted: string;
     mobile_hash: string;
-    otp: string;
-    otp_timer: Date;
     max_retry: number;
   }) {
     const hashedPassword = await this.cryptoService.hashPassword(data.password);
