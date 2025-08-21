@@ -40,4 +40,9 @@ export default class AuthController {
   async basicDetails(@Body() basicDto: BasicDto) {
     return await this.service.basicDetails(basicDto, basicDto.email);
   }
+
+  @Post('logout')
+  async logout() {
+    return this.service.logout();
+  }
 }

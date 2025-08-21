@@ -18,6 +18,7 @@ import { UsersService } from '../users/users.service';
 import { getISTDate } from '../common/utils/time.util';
 import { UserStatus } from '../common/enums/userStatus.enum';
 import { CryptoService } from '../common/utils/crypto.service';
+import { MailJetService } from '../thirdParty/mailjet/mail.jet.service';
 
 const OTP_EXPIRY_MINUTES = 5;
 const OTP_RESEND_COOLDOWN_SECONDS = 60;
@@ -25,13 +26,12 @@ const OTP_MAX_RETRY = 3;
 
 @Injectable()
 export default class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private usersService: UsersService,
     private otpService: OtpService,
     private jwtService: JwtService,
     private cryptoService: CryptoService,
+    private mailService: MailJetService,
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
@@ -109,6 +109,16 @@ export default class AuthService {
         max_retry: 0,
       },
     );
+
+    const decryptedEmail = this.cryptoService.decryptField(
+      user.email_encrypted,
+    );
+
+    if (!decryptedEmail) {
+      throw new Error('Failed to decrypt email');
+    }
+
+    await this.mailService.sendOtpMail(decryptedEmail, newOtp, user.user_name);
 
     return sendOk(`OTP Sent Successfully To ${email}`);
   }
@@ -254,5 +264,9 @@ export default class AuthService {
     );
 
     return sendOk('Basic details updated successfully');
+  }
+
+  async logout() {
+    return { message: 'Logged out successfully' };
   }
 }
