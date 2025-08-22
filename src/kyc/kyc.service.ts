@@ -38,6 +38,7 @@ export class KycService {
     await this.userModel.update(
       {
         address: body.address,
+        aadhar_number: body.aadhar_number,
         aadhar_encrypted: this.cryptoService.encryptField(body.aadhar_number),
         aadhar_hash: this.cryptoService.hashField(body.aadhar_number),
         pan_number: body.pan_number,

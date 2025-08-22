@@ -9,8 +9,8 @@ import {
   IsOptional,
   IsDateString,
   IsNotEmpty,
-  isNotEmpty,
-  isNumber,
+  Min,
+  Max,
 } from 'class-validator';
 
 export class KycDto {
@@ -69,5 +69,9 @@ export class KycDto {
   @IsNumber()
   tenure_months: number;
 
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(1)
+  @Max(31)
   salary_credit_day: number;
 }

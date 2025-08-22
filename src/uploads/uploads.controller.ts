@@ -3,29 +3,25 @@ import {
   Controller,
   Post,
   Get,
-  Delete,
   Param,
   UploadedFiles,
   UseInterceptors,
-  Res,
   ParseIntPipe,
   Req,
+  Query,
 } from '@nestjs/common';
-import { join } from 'path';
-import { Response } from 'express';
-import { createReadStream } from 'fs';
 import { UploadsService } from './uploads.service';
 import { makeMulterOptions } from './multer.config';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
-@Controller('kyc/:kycId/uploads')
+@Controller('kyc/uploads')
 export class UploadsController {
   constructor(private readonly uploadsService: UploadsService) {}
 
   @Post()
   @UseInterceptors(AnyFilesInterceptor(makeMulterOptions()))
   async upload(
-    @Param('kycId', ParseIntPipe) kycId: number,
+    @Query('kycId', ParseIntPipe) kycId: number,
     @UploadedFiles() files: Express.Multer.File[],
     @Req() req: any,
   ) {
@@ -33,32 +29,7 @@ export class UploadsController {
   }
 
   @Get()
-  async list(@Param('kycId', ParseIntPipe) kycId: number) {
+  async list(@Query('kycId', ParseIntPipe) kycId: number) {
     return this.uploadsService.list(kycId);
   }
-
-  // @Get(':uploadId')
-  // async download(
-  //   @Param('kycId', ParseIntPipe) kycId: number,
-  //   @Param('uploadId', ParseIntPipe) uploadId: number,
-  //   @Res() res: Response,
-  // ) {
-  //   const file = await this.uploadsService.getOne(kycId, uploadId);
-  //   const absPath = join(process.cwd(), file.path);
-
-  //   res.setHeader('Content-Type', file.mimeType);
-  //   res.setHeader(
-  //     'Content-Disposition',
-  //     `inline; filename="${file.originalName}"`,
-  //   );
-  //   createReadStream(absPath).pipe(res);
-  // }
-
-  // @Delete(':uploadId')
-  // async delete(
-  //   @Param('kycId', ParseIntPipe) kycId: number,
-  //   @Param('uploadId', ParseIntPipe) uploadId: number,
-  // ) {
-  //   return this.uploadsService.remove(kycId, uploadId);
-  // }
 }

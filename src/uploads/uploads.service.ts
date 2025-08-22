@@ -1,13 +1,16 @@
 // Imports
+import {
+  raiseBadReq,
+  raiseNotFound,
+  raiseUnauthorized,
+} from '../config/error.config';
 import { Op } from 'sequelize';
-import { promises as fs } from 'fs';
+import { relative } from 'path';
 import { Upload } from './upload.model';
 import { Kyc } from '..//kyc/kyc.model';
 import { Injectable } from '@nestjs/common';
 import { User } from '..//users/users.model';
-import { relative, join } from 'path';
 import { InjectModel } from '@nestjs/sequelize';
-import { raiseNotFound, raiseUnauthorized } from '../config/error.config';
 
 @Injectable()
 export class UploadsService {
@@ -28,11 +31,25 @@ export class UploadsService {
       );
     }
 
+    if (!kycId) {
+      throw raiseBadReq('kycId is required');
+    }
+
     const kyc = await this.kycModel.findByPk(kycId);
     if (!kyc) return raiseNotFound('KYC not found');
 
     const records = await Promise.all(
       files.map(async (file) => {
+        const existing = await this.uploadModel.findOne({
+          where: { kycId, tag: file.fieldname },
+        });
+
+        if (existing) {
+          throw raiseBadReq(
+            `File for "${file.fieldname}" already uploaded for this KYC.`,
+          );
+        }
+
         const saved = await this.uploadModel.create({
           kycId,
           userId,
@@ -52,7 +69,6 @@ export class UploadsService {
         const columnName = tagToColumnMap[file.fieldname];
         if (columnName) {
           const relativePath = this.getRelativePath(file.path);
-
           await this.userModel.update(
             { [columnName]: relativePath },
             { where: { id: userId } },
@@ -72,23 +88,4 @@ export class UploadsService {
       order: [['created_at', 'DESC']],
     });
   }
-
-  // async getOne(kycId: number, uploadId: number) {
-  //   const record = await this.uploadModel.findOne({
-  //     where: { kycId, id: uploadId },
-  //   });
-  //   if (!record) throw new raiseNotFound('File not found');
-  //   return record;
-  // }
-
-  // async remove(kycId: number, uploadId: number) {
-  //   const record = await this.getOne(kycId, uploadId);
-
-  //   try {
-  //     await fs.unlink(join(process.cwd(), record.path));
-  //   } catch {}
-
-  //   await record.destroy();
-  //   return { deleted: true };
-  // }
 }
