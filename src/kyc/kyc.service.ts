@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { KycStatus } from '../common/enums/kycStatus.enum';
 import { UserStatus } from '../common/enums/userStatus.enum';
 import { CryptoService } from '../common/utils/crypto.service';
-import { raiseBadReq, raiseNotFound, sendOk } from '../config/error.config';
+import { raiseBadReq, raiseNotFound } from '../config/error.config';
 import { VerificationStatus } from '../common/enums/verificationsStatus.enum';
 
 @Injectable()
@@ -63,7 +63,6 @@ export class KycService {
     });
 
     return {
-      success: true,
       message: 'KYC details submitted successfully',
       kyc: kycEntry,
     };
@@ -95,7 +94,7 @@ export class KycService {
 
     await this.kycModel.update({ status: 1 }, { where: { userId } });
 
-    return sendOk('KYC verified successfully');
+    return 'KYC verified successfully';
   }
 
   async rejectKyc(userId: number) {
@@ -107,6 +106,6 @@ export class KycService {
       { where: { id: userId } },
     );
 
-    return sendOk('KYC status updated to rejected');
+    return 'KYC status updated to rejected';
   }
 }

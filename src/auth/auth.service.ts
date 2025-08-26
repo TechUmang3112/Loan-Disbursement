@@ -1,6 +1,5 @@
 // Imports
 import {
-  sendOk,
   raiseBadReq,
   raiseNotFound,
   raiseTooManyReq,
@@ -12,8 +11,8 @@ import { JwtService } from '@nestjs/jwt';
 import { BasicDto } from '../dto/basic.dto';
 import { LoginDto } from '../dto/login.dto';
 import { SignUpDto } from '../dto/auth.dto';
+import { Injectable } from '@nestjs/common';
 import { OtpService } from '../otp/otp.service';
-import { Injectable, Logger } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { getISTDate } from '../common/utils/time.util';
 import { UserStatus } from '../common/enums/userStatus.enum';
@@ -120,7 +119,7 @@ export default class AuthService {
 
     await this.mailService.sendOtpMail(decryptedEmail, newOtp, user.user_name);
 
-    return sendOk(`OTP Sent Successfully To ${email}`);
+    return `OTP Sent Successfully To ${email}`;
   }
 
   async verifyOtp(otpDto: OtpDto) {
@@ -177,7 +176,7 @@ export default class AuthService {
         this.cryptoService.hashField(email),
         updateFields,
       );
-      return sendOk('Email verified successfully');
+      return 'Email verified successfully';
     }
 
     if (user.is_email_verified === 1 && user.is_mobile_verified === 0) {
@@ -187,12 +186,10 @@ export default class AuthService {
         this.cryptoService.hashField(email),
         updateFields,
       );
-      return sendOk('Mobile verified successfully');
+      return 'Mobile verified successfully';
     }
 
-    return sendOk(
-      'Now you can enter your basic details then you can proceed to complete your KYC',
-    );
+    return 'Now you can enter your basic details then you can proceed to complete your KYC';
   }
 
   async login(loginDto: LoginDto) {
@@ -227,7 +224,6 @@ export default class AuthService {
     const accessToken = this.jwtService.sign(payload);
 
     return {
-      success: true,
       message: 'Login successful',
       access_token: accessToken,
       user: {
@@ -263,7 +259,7 @@ export default class AuthService {
       },
     );
 
-    return sendOk('Basic details updated successfully');
+    return 'Basic details updated successfully';
   }
 
   async logout() {

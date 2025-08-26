@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UserStatus } from 'common/enums/userStatus.enum';
 import { CryptoService } from '@/common/utils/crypto.service';
 import { LoanStatus } from '../../common/enums/loanStatus.enum';
-import { raiseBadReq, raiseNotFound, sendOk } from 'config/error.config';
+import { raiseBadReq, raiseNotFound } from 'config/error.config';
 
 @Injectable()
 export class AdminService {
@@ -34,7 +34,7 @@ export class AdminService {
       { where: { id: userId } },
     );
 
-    return sendOk('User salary verification status updated successfully');
+    return 'User salary verification status updated successfully';
   }
 
   async getUserStatus(userId: number) {
@@ -79,7 +79,6 @@ export class AdminService {
     });
 
     return {
-      success: true,
       count: loans.length,
       status: normalizedStatus,
       loans,

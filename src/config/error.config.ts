@@ -1,32 +1,34 @@
 // Imports
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-export function raiseBadReq(err_msg: string) {
+export function raiseError(status: HttpStatus, message: string): never {
   throw new HttpException(
-    { success: false, message: err_msg },
-    HttpStatus.BAD_REQUEST,
+    {
+      success: false,
+      message,
+    },
+    status,
   );
 }
 
-export function raiseNotFound(err_msg: string) {
-  throw new HttpException(
-    { success: false, message: err_msg },
-    HttpStatus.NOT_FOUND,
-  );
+export function raiseBadReq(message: string) {
+  return raiseError(HttpStatus.BAD_REQUEST, message);
 }
 
-export function raiseTooManyReq(err_msg: string) {
-  throw new HttpException(
-    { success: false, message: err_msg },
-    HttpStatus.TOO_MANY_REQUESTS,
-  );
+export function raiseUnauthorized(message: string) {
+  return raiseError(HttpStatus.UNAUTHORIZED, message);
 }
 
-export function raiseUnauthorized(err_msg: string) {
-  throw new HttpException(
-    { success: false, message: err_msg },
-    HttpStatus.UNAUTHORIZED,
-  );
+export function raiseForbidden(message: string) {
+  return raiseError(HttpStatus.FORBIDDEN, message);
+}
+
+export function raiseNotFound(message: string) {
+  return raiseError(HttpStatus.NOT_FOUND, message);
+}
+
+export function raiseTooManyReq(message: string) {
+  return raiseError(HttpStatus.TOO_MANY_REQUESTS, message);
 }
 
 export function sendOk(msg: string, status: HttpStatus = HttpStatus.OK) {
@@ -40,11 +42,4 @@ export function sendOk(msg: string, status: HttpStatus = HttpStatus.OK) {
   if (Object.keys(responseObj).length > 0) prepareResponse.data = responseObj;
   prepareResponse.success = true;
   return { success: true, message: msg, statusCode: status };
-}
-
-export function raiseForbidden(err_msg: string) {
-  throw new HttpException(
-    { success: false, message: err_msg },
-    HttpStatus.FORBIDDEN,
-  );
 }

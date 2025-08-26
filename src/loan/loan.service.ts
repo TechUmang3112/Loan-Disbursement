@@ -57,7 +57,6 @@ export class LoanService {
       { where: { id: userId } },
     );
     return {
-      success: true,
       message: 'Loan offered successfully',
       loan_offer: loan,
     };
@@ -135,7 +134,6 @@ export class LoanService {
     }
 
     return {
-      success: true,
       message: `Loan ${response}d successfully`,
       updatedLoan: loan,
     };
