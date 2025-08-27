@@ -37,51 +37,62 @@ export class AdminService {
     return 'User salary verification status updated successfully';
   }
 
-  async getUserStatus(userId: number) {
-    const user = await this.userModel.findByPk(userId, {
-      attributes: ['id', 'user_name', 'email_encrypted', 'user_status'],
-    });
+  private steps = [
+    { id: 1, label: 'Registration' },
+    { id: 2, label: 'Basic Details' },
+    { id: 3, label: 'KYC' },
+    { id: 4, label: 'Salary Verification' },
+    { id: 5, label: 'Loan Approved' },
+    { id: 6, label: 'Disbursement' },
+  ];
 
-    if (!user) {
-      throw raiseNotFound('User not found');
-    }
+  async getUserStatus(userId: number) {
+    const user = await this.userModel.findByPk(userId);
+    if (!user) return raiseNotFound('User not found');
+
+    const currentStatus = user.user_status;
+
+    const statusLabel =
+      this.steps.find((s) => s.id === currentStatus)?.label ?? 'Unknown';
 
     const plainEmail = user.email_encrypted
       ? this.cryptoService.decryptField(user.email_encrypted)
       : null;
 
     return {
-      id: user.id,
-      name: user.user_name,
+      userId,
+      currentStatus,
+      statusLabel,
       email: plainEmail,
-      status_code: user.user_status,
-      status_label: UserStatus[user.user_status],
+      name: user.user_name,
     };
   }
 
-  async listLoansByStatus(status: string) {
-    const statusMap = {
-      offered: LoanStatus.OFFERED,
-      approved: LoanStatus.APPROVED,
-      rejected: LoanStatus.REJECTED,
-    };
-
-    const normalizedStatus = status?.toLowerCase();
-
-    if (!statusMap.hasOwnProperty(normalizedStatus)) {
-      throw raiseBadReq(
-        'Invalid status. Valid values are: offered, approved, rejected.',
-      );
-    }
-
-    const loans = await this.loanModel.findAll({
-      where: { status: statusMap[normalizedStatus] },
+  async getUsersByStatus(status: number) {
+    const users = await this.userModel.findAll({
+      where: { user_status: status },
+      attributes: ['id', 'email', 'user_name', 'user_status'],
     });
 
     return {
-      count: loans.length,
-      status: normalizedStatus,
-      loans,
+      status,
+      statusLabel: this.steps.find((s) => s.id === status)?.label ?? 'Unknown',
+      users,
+    };
+  }
+
+  async getStatusSummary() {
+    const summary: { id: number; label: string; count: number }[] = [];
+
+    for (const step of this.steps) {
+      const count = await this.userModel.count({
+        where: { user_status: step.id },
+      });
+      summary.push({ id: step.id, label: step.label, count });
+    }
+
+    return {
+      Summary: summary,
     };
   }
 }

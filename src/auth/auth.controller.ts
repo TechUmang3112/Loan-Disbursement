@@ -5,7 +5,7 @@ import { LoginDto } from '../dto/login.dto';
 import { SignUpDto } from '../dto/auth.dto';
 import { BasicDto } from '../dto/basic.dto';
 import { ResendOtpDto } from '../dto/resendOtp.dto';
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Req } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 
 @Controller('auth')
@@ -42,7 +42,7 @@ export default class AuthController {
   }
 
   @Post('logout')
-  async logout() {
-    return this.service.logout();
+  async logout(@Req() req: any) {
+    return this.service.logout(req.user);
   }
 }

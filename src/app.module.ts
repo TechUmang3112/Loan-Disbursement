@@ -16,10 +16,10 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { RolesGuard } from './common/guards/roles.guard';
 import { UploadsModule } from './uploads/uploads.module';
 import { JwtAuthGuard } from './common/guards/auth.guard';
+import { CryptoModule } from './common/utils/crypto.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductionGuard } from './middleware/production.guard';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { CryptoModule } from '@/common/utils/crypto.module';
 
 @Module({
   imports: [

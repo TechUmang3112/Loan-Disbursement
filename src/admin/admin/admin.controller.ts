@@ -24,15 +24,21 @@ export class AdminController {
     return this.adminService.verifySalary(userId);
   }
 
-  @Get('userStatus/:userId')
+  @Get('status')
   @Roles('admin')
-  async getUserStatus(@Param('userId', ParseIntPipe) userId: number) {
-    return this.adminService.getUserStatus(userId);
+  async getUserStatus(@Query('userId') userId: string) {
+    return this.adminService.getUserStatus(+userId);
   }
 
-  @Get('/list')
+  @Get('status/step')
   @Roles('admin')
-  async listLoansByStatus(@Query('status') status: string) {
-    return this.adminService.listLoansByStatus(status);
+  async getUsersByStatus(@Query('status') status: string) {
+    return this.adminService.getUsersByStatus(+status);
+  }
+
+  @Get('status/summary')
+  @Roles('admin')
+  async getStatusSummary() {
+    return this.adminService.getStatusSummary();
   }
 }

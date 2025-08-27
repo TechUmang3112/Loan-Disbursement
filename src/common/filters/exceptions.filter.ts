@@ -1,18 +1,18 @@
 // Imports
 import {
-  ExceptionFilter,
   Catch,
+  HttpStatus,
   ArgumentsHost,
   HttpException,
-  HttpStatus,
+  ExceptionFilter,
 } from '@nestjs/common';
+import { formateReadableDate } from '../../common/date.service';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const request = ctx.getRequest();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
@@ -27,8 +27,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       success: false,
       statusCode: status,
       message,
-      timestamp: new Date().toISOString(),
-      path: request.url,
+      timestamp: formateReadableDate(new Date()),
     });
   }
 }

@@ -262,7 +262,10 @@ export default class AuthService {
     return 'Basic details updated successfully';
   }
 
-  async logout() {
-    return { message: 'Logged out successfully' };
+  async logout(user?: any) {
+    return {
+      message: 'Logged out successfully',
+      user: user ? { id: user.id, email: user.email } : null,
+    };
   }
 }

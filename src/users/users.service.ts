@@ -87,23 +87,33 @@ export class UsersService {
   }
 
   async getUserStatus(userId: number) {
-    const user = await this.userModel.findByPk(userId, {
-      raw: true,
-      attributes: ['id', 'user_name', 'email_encrypted', 'user_status'],
-    });
+    const user = await this.userModel.findByPk(userId);
+    if (!user) return raiseNotFound('User not found');
 
-    if (!user) throw raiseNotFound('User not found');
+    const steps = [
+      { id: 1, label: 'Registration' },
+      { id: 2, label: 'Basic Details' },
+      { id: 3, label: 'KYC' },
+      { id: 4, label: 'Salary Verification' },
+      { id: 5, label: 'Loan Approved' },
+      { id: 6, label: 'Disbursement' },
+    ];
 
-    const emailPlain = user.email_encrypted
-      ? this.cryptoService.decryptField(user.email_encrypted)
-      : null;
+    const currentStatus = user.user_status;
+
+    const NewSteps = steps.map((step) => ({
+      ...step,
+      isCompleted: step.id < currentStatus,
+      isCurrent: step.id === currentStatus,
+    }));
+
+    const userName = user.user_name;
 
     return {
-      id: user.id,
-      name: user.user_name,
-      email: emailPlain,
-      status_code: user.user_status,
-      status_label: UserStatus[user.user_status],
+      userName,
+      userId,
+      currentStatus,
+      steps: NewSteps,
     };
   }
 }

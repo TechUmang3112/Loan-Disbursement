@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { formateReadableDate } from '../../common/date.service';
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
@@ -23,7 +24,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
           message = data;
           payload = null;
         } else if (data && typeof data === 'object' && 'message' in data) {
-          // returned { message, ...rest }
+          // returned { message, ...other data}
           message = data.message;
           const { message: _, ...rest } = data;
           payload = Object.keys(rest).length > 0 ? rest : null;
@@ -38,8 +39,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
           statusCode: response.statusCode,
           message,
           data: payload,
-          timestamp: new Date().toISOString(),
-          path: ctx.getRequest().url,
+          timestamp: formateReadableDate(new Date()),
         };
       }),
     );
