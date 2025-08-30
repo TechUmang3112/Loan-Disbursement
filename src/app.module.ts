@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppService } from './app.service';
 import { OtpModule } from './otp/otp.module';
 import { KycModule } from './kyc/kyc.module';
+import { EmiModule } from './emi/emi.module';
 import { LoanModule } from './loan/loan.module';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -51,6 +52,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
     AdminModule,
     LoanModule,
     CryptoModule,
+    EmiModule,
   ],
   controllers: [AppController],
   providers: [

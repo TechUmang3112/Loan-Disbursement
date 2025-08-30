@@ -5,11 +5,13 @@ import {
   raiseNotFound,
 } from '../config/error.config';
 import { Loan } from './loan.model';
+import { Emi } from '../emi/emi.model';
 import { Kyc } from '../kyc/kyc.model';
 import { Injectable } from '@nestjs/common';
 import { User } from '../users/users.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { LoanOfferDto } from '../dto/loanOffer.dto';
+import { EmiAttributes } from '../emi/emi.attributes';
 import { UserStatus } from '../common/enums/userStatus.enum';
 import { LoanStatus } from '../common/enums/loanStatus.enum';
 
@@ -19,6 +21,7 @@ export class LoanService {
     @InjectModel(Loan) private loanModel: typeof Loan,
     @InjectModel(User) private userModel: typeof User,
     @InjectModel(Kyc) private kycModel: typeof Kyc,
+    @InjectModel(Emi) private emiModel: typeof Emi,
   ) {}
 
   async offerLoan(userId: number, dto: LoanOfferDto) {
@@ -123,6 +126,8 @@ export class LoanService {
         disbursed_on: new Date(),
         next_emi_date: nextEmiDate,
       });
+
+      await this.generateEmiSchedule(loan, user.emi_due_day);
     } else if (response === 'reject') {
       await this.loanModel.update(
         { status: LoanStatus.REJECTED },
@@ -137,5 +142,68 @@ export class LoanService {
       message: `Loan ${response}d successfully`,
       updatedLoan: loan,
     };
+  }
+
+  private async generateEmiSchedule(loan: Loan, emiDueDay: number) {
+    const emisToInsert: EmiAttributes[] = [];
+    const startDate = new Date(loan.disbursed_on || new Date());
+
+    let dueDate = new Date(startDate);
+    dueDate.setDate(emiDueDay);
+
+    if (dueDate <= startDate) {
+      dueDate.setMonth(dueDate.getMonth() + 1);
+    }
+
+    for (let i = 1; i <= loan.tenure_months; i++) {
+      emisToInsert.push({
+        loan_id: loan.loanId,
+        emi_amount: loan.monthly_emi,
+        due_date: new Date(dueDate),
+        status: 'Pending',
+      });
+
+      dueDate.setMonth(dueDate.getMonth() + 1);
+    }
+
+    const existingEmis = await this.emiModel.findAll({
+      where: { loan_id: loan.loanId },
+      attributes: ['due_date'],
+    });
+
+    const existingSet = new Set(
+      existingEmis.map((e) => new Date(e.due_date as any).toISOString()),
+    );
+
+    const finalCreate = emisToInsert.filter(
+      (e) => !existingSet.has(new Date(e.due_date).toISOString()),
+    );
+
+    if (finalCreate.length === 0) {
+      console.log(
+        'generateEmiSchedule: no new EMIs  tocreate (already present)',
+      );
+      return;
+    }
+
+    const sequelize = this.emiModel.sequelize;
+    if (!sequelize) {
+      await this.emiModel.bulkCreate(finalCreate);
+      return;
+    }
+
+    const t = await sequelize.transaction();
+    try {
+      await this.emiModel.bulkCreate(finalCreate, { transaction: t });
+      await t.commit();
+      console.log(`generateEmiSchedule: created ${finalCreate.length} EMIs`);
+    } catch (err) {
+      await t.rollback();
+      console.error(
+        'generateEmiSchedule: failed to create EMIs, rolled back',
+        err,
+      );
+      throw err;
+    }
   }
 }

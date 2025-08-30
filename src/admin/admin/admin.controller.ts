@@ -24,6 +24,12 @@ export class AdminController {
     return this.adminService.verifySalary(userId);
   }
 
+  @Get('/list')
+  @Roles('admin')
+  async listLoansByStatus(@Query('status') status: string) {
+    return this.adminService.listLoansByStatus(status);
+  }
+
   @Get('status')
   @Roles('admin')
   async getUserStatus(@Query('userId') userId: string) {

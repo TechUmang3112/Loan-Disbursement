@@ -7,7 +7,9 @@ import {
   ForeignKey,
   BelongsTo,
   Default,
+  HasMany,
 } from 'sequelize-typescript';
+import { Emi } from '../emi/emi.model';
 import { User } from '../users/users.model';
 import { LoanStatus } from '../common/enums/loanStatus.enum';
 
@@ -27,6 +29,9 @@ export class Loan extends Model {
 
   @BelongsTo(() => User)
   declare user: User;
+
+  @HasMany(() => Emi)
+  emis: Emi[];
 
   @Column({ type: DataType.FLOAT })
   declare amount: number;
