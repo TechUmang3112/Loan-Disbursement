@@ -32,8 +32,10 @@ export class EmiService {
         (paymentDate.getTime() - dueDate.getTime()) / msPerDay,
       );
       const emiAmountNum = Number(emi.emi_amount) || 0;
-      lateFee = emiAmountNum * 0.001 * daysLate; // 0.1% per day
-      lateFee = Math.round(lateFee * 100) / 100; // round to 2 decimals
+      // 0.1% per day
+      lateFee = emiAmountNum * 0.001 * daysLate;
+      // round to 2 decimals
+      lateFee = Math.round(lateFee * 100) / 100;
     }
 
     await this.emiModel.update(

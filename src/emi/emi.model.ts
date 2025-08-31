@@ -5,6 +5,7 @@ import {
   Model,
   DataType,
   ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
 import { Loan } from '../loan/loan.model';
@@ -31,6 +32,9 @@ export class Emi
     allowNull: false,
   })
   declare loan_id: number;
+
+  @BelongsTo(() => Loan)
+  loan: Loan;
 
   @Column({
     type: DataType.FLOAT,

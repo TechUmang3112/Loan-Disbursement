@@ -1,8 +1,11 @@
 // Imports
+import { Op } from 'sequelize';
 import { User } from 'users/users.model';
+import { Emi } from '../../emi/emi.model';
 import { Injectable } from '@nestjs/common';
 import { Loan } from '../../loan/loan.model';
 import { InjectModel } from '@nestjs/sequelize';
+import { GetEmisDto } from '../../dto/getEmi.dto';
 import { UserStatus } from 'common/enums/userStatus.enum';
 import { LoanStatus } from '../../common/enums/loanStatus.enum';
 import { raiseBadReq, raiseNotFound } from 'config/error.config';
@@ -16,6 +19,9 @@ export class AdminService {
 
     @InjectModel(Loan)
     private readonly loanModel: typeof Loan,
+
+    @InjectModel(Emi)
+    private emiModel: typeof Emi,
 
     private readonly cryptoService: CryptoService,
   ) {}
@@ -120,5 +126,69 @@ export class AdminService {
       status: normalizedStatus,
       loans,
     };
+  }
+
+  async getAllEmis(filters: GetEmisDto) {
+    const { loanId, status, page, limit, dueDateFrom, dueDateTo } = filters;
+
+    const offset = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (loanId) where.loan_id = loanId;
+
+    if (status) where.status = status;
+
+    if (dueDateFrom && dueDateTo) {
+      where.due_date = {
+        [Op.between]: [new Date(dueDateFrom), new Date(dueDateTo)],
+      };
+    } else if (dueDateFrom) {
+      where.due_date = { [Op.gte]: new Date(dueDateFrom) };
+    } else if (dueDateTo) {
+      where.due_date = { [Op.lte]: new Date(dueDateTo) };
+    }
+
+    const { rows, count } = await this.emiModel.findAndCountAll({
+      where,
+      limit,
+      offset,
+      order: [['due_date', 'ASC']],
+    });
+
+    return {
+      data: rows,
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    };
+  }
+
+  async getEmiDetails(emiId: number) {
+    const emi = await this.emiModel.findByPk(emiId);
+
+    if (!emi) {
+      return raiseNotFound(`EMI with id ${emiId} not found`);
+    }
+
+    return emi;
+  }
+
+  async getUserEmis(userId: number) {
+    const emis = await this.emiModel.findAll({
+      include: [
+        {
+          model: Loan,
+          where: { user_id: userId },
+        },
+      ],
+    });
+
+    if (!emis || emis.length === 0) {
+      return { message: `No EMI records found for user ${userId}` };
+    }
+
+    return emis;
   }
 }

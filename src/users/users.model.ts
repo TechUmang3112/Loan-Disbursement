@@ -1,14 +1,18 @@
 // Imports
+import { Loan } from '../loan/loan.model';
 import { UserAttributes } from '../users/users.attributes';
 import { KycStatus } from '../common/enums/kycStatus.enum';
 import { UserStatus } from '../common/enums/userStatus.enum';
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { VerificationStatus } from '../common/enums/verificationsStatus.enum';
+import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
 
 @Table({ tableName: 'users' })
 export class User extends Model<UserAttributes> implements UserAttributes {
   @Column({ type: DataType.INTEGER, autoIncrement: true, primaryKey: true })
   declare id: number;
+
+  @HasMany(() => Loan)
+  loans: Loan[];
 
   @Column({ type: DataType.STRING, allowNull: false, unique: true })
   declare email: string;

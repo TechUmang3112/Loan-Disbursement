@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { GetEmisDto } from '../../dto/getEmi.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { JwtAuthGuard } from '../../common/guards/auth.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -46,5 +47,23 @@ export class AdminController {
   @Roles('admin')
   async getStatusSummary() {
     return this.adminService.getStatusSummary();
+  }
+
+  @Get('emis')
+  @Roles('admin')
+  async getAllEmis(@Query() query: GetEmisDto) {
+    return this.adminService.getAllEmis(query);
+  }
+
+  @Get('emi')
+  @Roles('admin')
+  async getEmiDetails(@Query('emiId', ParseIntPipe) emiId: number) {
+    return this.adminService.getEmiDetails(emiId);
+  }
+
+  @Get('emis/:userId')
+  @Roles('admin')
+  async getUserEmis(@Param('userId', ParseIntPipe) userId: number) {
+    return this.adminService.getUserEmis(userId);
   }
 }
