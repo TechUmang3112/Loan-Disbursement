@@ -31,6 +31,10 @@ export function raiseTooManyReq(message: string) {
   return raiseError(HttpStatus.TOO_MANY_REQUESTS, message);
 }
 
+export function raiseConflict(message: string) {
+  return raiseError(HttpStatus.CONFLICT, message);
+}
+
 // export function sendOk(msg: string, status: HttpStatus = HttpStatus.OK) {
 //   const responseObj: any = {};
 //   const prepareResponse: any = {};

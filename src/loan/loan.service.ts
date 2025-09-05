@@ -155,10 +155,18 @@ export class LoanService {
       dueDate.setMonth(dueDate.getMonth() + 1);
     }
 
+    const totalInterest =
+      loan.amount * (loan.interest_rate / 100) * loan.tenure_months;
+    const capitalPerEmi = loan.amount / loan.tenure_months;
+    const interestPerEmi = totalInterest / loan.tenure_months;
+
     for (let i = 1; i <= loan.tenure_months; i++) {
       emisToInsert.push({
         loan_id: loan.loanId,
+        user_id: loan.userId,
         emi_amount: loan.monthly_emi,
+        capital_amount: parseFloat(capitalPerEmi.toFixed(2)),
+        interest_amount: parseFloat(interestPerEmi.toFixed(2)),
         due_date: new Date(dueDate),
         status: 'Pending',
       });
@@ -180,9 +188,6 @@ export class LoanService {
     );
 
     if (finalCreate.length === 0) {
-      console.log(
-        'generateEmiSchedule: no new EMIs  tocreate (already present)',
-      );
       return;
     }
 
@@ -196,13 +201,8 @@ export class LoanService {
     try {
       await this.emiModel.bulkCreate(finalCreate, { transaction: t });
       await t.commit();
-      console.log(`generateEmiSchedule: created ${finalCreate.length} EMIs`);
     } catch (err) {
       await t.rollback();
-      console.error(
-        'generateEmiSchedule: failed to create EMIs, rolled back',
-        err,
-      );
       throw err;
     }
   }

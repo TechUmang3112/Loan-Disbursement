@@ -7,6 +7,8 @@ import {
   Get,
   UseGuards,
   Query,
+  Post,
+  Body,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { GetEmisDto } from '../../dto/getEmi.dto';
@@ -65,5 +67,34 @@ export class AdminController {
   @Roles('admin')
   async getUserEmis(@Param('userId', ParseIntPipe) userId: number) {
     return this.adminService.getUserEmis(userId);
+  }
+
+  @Get('payments')
+  @Roles('admin')
+  async getAllPayments(
+    @Query('status') status?: string,
+    @Query('loanId') loanId?: number,
+    @Query('userId') userId?: number,
+  ) {
+    return this.adminService.getAllPayments(status, loanId, userId);
+  }
+
+  @Get('payments/user')
+  @Roles('admin')
+  async getPaymentsForUser(@Query('userId') userId: number) {
+    return this.adminService.getPaymentsForUser(userId);
+  }
+
+  @Patch('payments/update')
+  @Roles('admin')
+  async updatePaymentStatus(
+    @Body()
+    body: {
+      payment_id: number;
+      status: 'PAID' | 'FAILED' | 'PENDING';
+      remarks?: string;
+    },
+  ) {
+    return this.adminService.updatePaymentStatus(body);
   }
 }

@@ -9,6 +9,7 @@ import {
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
 import { Loan } from '../loan/loan.model';
+import { User } from '../users/users.model';
 import { EmiAttributes } from '../emi/emi.attributes';
 
 export interface EmiCreationAttributes
@@ -26,6 +27,16 @@ export class Emi
   })
   declare emi_id?: number;
 
+  @ForeignKey(() => User)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  declare user_id: number;
+
+  @BelongsTo(() => User)
+  user: User;
+
   @ForeignKey(() => Loan)
   @Column({
     type: DataType.INTEGER,
@@ -41,6 +52,18 @@ export class Emi
     allowNull: false,
   })
   declare emi_amount: number;
+
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: false,
+  })
+  declare capital_amount: number;
+
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: false,
+  })
+  declare interest_amount: number;
 
   @Column({
     type: DataType.DATE,
@@ -66,4 +89,5 @@ export class Emi
     allowNull: true,
   })
   declare late_fee?: number;
+  payment: any;
 }

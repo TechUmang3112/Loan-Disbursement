@@ -34,6 +34,8 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
           payload = data;
         }
 
+        payload = this.transformDates(payload);
+
         return {
           success: true,
           statusCode: response.statusCode,
@@ -43,5 +45,27 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
         };
       }),
     );
+  }
+
+  private transformDates(data: any): any {
+    if (!data) return data;
+    if (typeof data.toJSON === 'function') {
+      data = data.toJSON();
+    }
+
+    if (Array.isArray(data)) {
+      return data.map((item) => this.transformDates(item));
+    } else if (data && typeof data === 'object') {
+      const transformed: any = {};
+      for (const key of Object.keys(data)) {
+        if ((key === 'createdAt' || key === 'updatedAt') && data[key]) {
+          transformed[key] = formateReadableDate(data[key]);
+        } else {
+          transformed[key] = this.transformDates(data[key]);
+        }
+      }
+      return transformed;
+    }
+    return data;
   }
 }

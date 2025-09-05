@@ -22,13 +22,13 @@ export interface UploadAttributes {
   path: string;
   mimeType: string;
   size: number;
-  created_at?: Date;
-  updated_at?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export type UploadCreationAttributes = Optional<
   UploadAttributes,
-  'id' | 'userId' | 'created_at' | 'updated_at'
+  'id' | 'userId' | 'createdAt' | 'updatedAt'
 >;
 
 @Table({
@@ -47,9 +47,15 @@ export class Upload extends Model<UploadAttributes, UploadCreationAttributes> {
   @Column({ type: DataType.INTEGER, allowNull: false, field: 'kyc_id' })
   declare kycId: number;
 
+  @BelongsTo(() => Kyc)
+  declare kyc: Kyc;
+
   @ForeignKey(() => User)
   @Column({ type: DataType.INTEGER, allowNull: true, field: 'user_id' })
   declare userId: number | null;
+
+  @BelongsTo(() => User)
+  declare user: User;
 
   @Column({ type: DataType.STRING, allowNull: false })
   declare tag: string;
@@ -65,10 +71,4 @@ export class Upload extends Model<UploadAttributes, UploadCreationAttributes> {
 
   @Column({ type: DataType.BIGINT, allowNull: false })
   declare size: number;
-
-  @BelongsTo(() => Kyc)
-  declare kyc: Kyc;
-
-  @BelongsTo(() => User)
-  declare user: User;
 }

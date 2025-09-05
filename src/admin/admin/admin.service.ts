@@ -10,6 +10,7 @@ import { UserStatus } from 'common/enums/userStatus.enum';
 import { LoanStatus } from '../../common/enums/loanStatus.enum';
 import { raiseBadReq, raiseNotFound } from 'config/error.config';
 import { CryptoService } from '../../common/utils/crypto.service';
+import { Payment, PaymentStatusType } from '../../payment/payment.model';
 
 @Injectable()
 export class AdminService {
@@ -22,6 +23,9 @@ export class AdminService {
 
     @InjectModel(Emi)
     private emiModel: typeof Emi,
+
+    @InjectModel(Payment)
+    private paymentModel: typeof Payment,
 
     private readonly cryptoService: CryptoService,
   ) {}
@@ -190,5 +194,48 @@ export class AdminService {
     }
 
     return emis;
+  }
+
+  async getAllPayments(status?: string, loanId?: number, userId?: number) {
+    const whereClause: any = {};
+
+    if (status) whereClause.status = status;
+    if (loanId) whereClause.loan_id = loanId;
+    if (userId) whereClause.user_id = userId;
+
+    return this.paymentModel.findAll({
+      where: whereClause,
+      include: [Emi],
+    });
+  }
+
+  async getPaymentsForUser(userId: number) {
+    const payments = await this.paymentModel.findAll({
+      where: { user_id: userId },
+    });
+
+    if (!payments || payments.length === 0) {
+      return raiseNotFound(`No payments found for userId ${userId}`);
+    }
+
+    return payments;
+  }
+
+  async updatePaymentStatus(body: {
+    payment_id: number;
+    status: 'PAID' | 'FAILED' | 'PENDING';
+    remarks?: string;
+  }) {
+    const payment = await this.paymentModel.findByPk(body.payment_id);
+
+    if (!payment) {
+      return raiseNotFound(`Payment with id ${body.payment_id} not found`);
+    }
+
+    payment.status = body.status.toUpperCase() as PaymentStatusType;
+
+    await payment.save();
+
+    return { message: 'Payment status updated successfully', payment };
   }
 }

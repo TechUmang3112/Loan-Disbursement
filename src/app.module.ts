@@ -1,29 +1,87 @@
 // imports
 import { join } from 'path';
-import { APP_GUARD } from '@nestjs/core';
 import { AppService } from './app.service';
+import { EmiModule } from './emi/emi.module';
 import { OtpModule } from './otp/otp.module';
 import { KycModule } from './kyc/kyc.module';
-import { EmiModule } from './emi/emi.module';
+import { ApiModule } from './api/api.module';
 import { LoanModule } from './loan/loan.module';
 import { AuthModule } from './auth/auth.module';
+import { ApiV1Module } from './api/v1/v1.module';
 import { AppController } from './app.controller';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { EmiReminderModule } from './cron/emi.module';
+import { PaymentModule } from './payment/payment.module';
+import { UploadsModule } from './uploads/uploads.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { RolesGuard } from './common/guards/roles.guard';
-import { UploadsModule } from './uploads/uploads.module';
 import { JwtAuthGuard } from './common/guards/auth.guard';
 import { CryptoModule } from './common/utils/crypto.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ProductionGuard } from './middleware/production.guard';
+import { APP_GUARD, RouterModule, Routes } from '@nestjs/core';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+
+const routes: Routes = [
+  {
+    path: '/api',
+    module: ApiModule,
+    children: [
+      {
+        path: 'v1',
+        module: ApiV1Module,
+        children: [
+          {
+            path: '',
+            module: AuthModule,
+          },
+          {
+            path: '',
+            module: UsersModule,
+          },
+          {
+            path: '',
+            module: KycModule,
+          },
+          {
+            path: '',
+            module: UploadsModule,
+          },
+          {
+            path: '',
+            module: OtpModule,
+          },
+          {
+            path: '',
+            module: LoanModule,
+          },
+          {
+            path: '',
+            module: CryptoModule,
+          },
+          {
+            path: '',
+            module: EmiModule,
+          },
+          {
+            path: '',
+            module: PaymentModule,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: '/admin',
+    module: AdminModule,
+  },
+];
 
 @Module({
   imports: [
+    RouterModule.register(routes),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     SequelizeModule.forRootAsync({
@@ -43,16 +101,9 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),
-    AuthModule,
-    UsersModule,
-    KycModule,
-    UploadsModule,
-    OtpModule,
     EmiReminderModule,
+    ApiModule,
     AdminModule,
-    LoanModule,
-    CryptoModule,
-    EmiModule,
   ],
   controllers: [AppController],
   providers: [

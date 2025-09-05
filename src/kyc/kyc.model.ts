@@ -18,13 +18,13 @@ export interface KycAttributes {
   id: number;
   userId: number;
   status: number;
-  created_at?: Date;
-  updated_at?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export type KycCreationAttributes = Optional<
   KycAttributes,
-  'id' | 'status' | 'created_at' | 'updated_at'
+  'id' | 'status' | 'createdAt' | 'updatedAt'
 >;
 
 @Table({

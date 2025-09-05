@@ -3,13 +3,17 @@ import { Op } from 'sequelize';
 import { Emi } from './emi.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { raiseNotFound } from '../config/error.config';
+import { Payment } from '../payment/payment.model';
+import { raiseConflict, raiseNotFound } from '../config/error.config';
 
 @Injectable()
 export class EmiService {
   constructor(
     @InjectModel(Emi)
     private readonly emiModel: typeof Emi,
+
+    @InjectModel(Payment)
+    private readonly paymentModel: typeof Payment,
   ) {}
 
   async getEmiSchedule(loanId: number) {
@@ -21,7 +25,11 @@ export class EmiService {
 
   async payEmi(emiId: number, paymentDate: Date = new Date()) {
     const emi = await this.emiModel.findByPk(emiId);
-    if (!emi) return raiseNotFound('EMI not found');
+    if (!emi) return raiseNotFound('EMI Not Found');
+
+    if (emi.status === 'Paid') {
+      return raiseConflict(`EMI with id ${emiId} is already paid`);
+    }
 
     const dueDate = new Date(emi.due_date as any);
 
@@ -47,7 +55,24 @@ export class EmiService {
       { where: { emi_id: emiId } },
     );
 
-    const updatedEmi = await this.emiModel.findByPk(emiId);
+    const updatedEmi = await this.emiModel.findOne({
+      where: { emi_id: emiId },
+    });
+
+    if (!updatedEmi) {
+      return raiseNotFound(`EMI with id ${emiId} not found`);
+    }
+
+    await this.paymentModel.create({
+      user_id: updatedEmi.user_id,
+      emi_id: updatedEmi.emi_id,
+      amount_paid: updatedEmi.emi_amount,
+      payment_date: paymentDate,
+      payment_mode: 'UPI',
+      status: 'PAID',
+      transaction_id: ` `,
+    });
+
     return updatedEmi;
   }
 
